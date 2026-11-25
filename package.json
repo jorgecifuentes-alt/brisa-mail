@@ -1,0 +1,22 @@
+{
+  "name": "brisa-mail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cliente de correo estilo Spark sobre IMAP/SMTP, con dictado, resúmenes y mapas mentales con Claude.",
+  "scripts": {
+    "build:client": "node scripts/build-client.mjs",
+    "dev": "npm run build:client && next dev",
+    "build": "npm run build:client && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
+    "imapflow": "^2.12.2",
+    "mailparser": "^3.15.0",
+    "next": "14.2.35",
+    "nodemailer": "^10.6.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "web-push": "^4.0.0"
+  }
+}
