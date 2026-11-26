@@ -1,6 +1,6 @@
 // Brisa · service worker: guarda la interfaz para abrir rápido y sin conexión.
 // Nunca guarda el correo: las llamadas a /api siempre van al servidor.
-const CACHE = 'brisa-shell-v2';
+const CACHE = 'brisa-shell-v3';
 const SHELL = ['/index.html', '/shim.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

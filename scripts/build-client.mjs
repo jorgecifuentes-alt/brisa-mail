@@ -43,6 +43,7 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta n
 <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <title>Brisa Mail</title>
+<meta name="brisa-build" content="${Date.now()}">
 <script src="/shim.js"></script>
 </head><body>
 ${body}

@@ -2496,6 +2496,8 @@ setInterval(()=>{
 
 /* ---------- Deslizar hacia abajo para actualizar ---------- */
 async function pullRefresh(){
+  // App instalada (servidor propio): si hay versión nueva, deslizar hacia abajo la carga entera.
+  if(window.brisaCheckUpdate&&await window.brisaCheckUpdate(true))return;
   if(S.mode==='gmail'&&caps.mcp){
     if(S.folder==='smart'){await loadSmart(true);if(S.section&&S.section!=='all')await loadSec(S.section,{size:25,force:true})}
     else if(GQ[S.folder])await loadFolder(S.folder,true);

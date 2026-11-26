@@ -281,6 +281,40 @@
 
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
+  /* ---------- Versión nueva: avisar y actualizar ----------
+   * En el celular la app instalada puede quedar abierta días en segundo plano. Al volver a ella
+   * (y cada 5 minutos) se revisa si el servidor tiene una versión nueva y se ofrece actualizar. */
+  const BUILD = document.querySelector('meta[name="brisa-build"]')?.content || '';
+  let updShown = false;
+  async function hardReload() {
+    try { const ks = await caches.keys(); await Promise.all(ks.map((k) => caches.delete(k))); } catch { /* sin caché */ }
+    try { const r = await navigator.serviceWorker?.getRegistration(); await r?.update(); } catch { /* sin service worker */ }
+    location.reload();
+  }
+  async function checkUpdate(auto) {
+    if (!BUILD) return false;
+    try {
+      const res = await fetch('/index.html?v=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
+      if (!res.ok) return false;
+      const m = /name="brisa-build" content="(\d+)"/.exec(await res.text());
+      if (!m || m[1] === BUILD) return false;
+      if (auto) { hardReload(); return true; }
+      if (updShown) return true;
+      updShown = true;
+      const b = document.createElement('div');
+      b.setAttribute('role', 'status');
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:9999;display:flex;align-items:center;gap:14px;background:#1F1F1F;color:#fff;padding:12px 12px 12px 18px;border-radius:14px;box-shadow:0 6px 24px rgb(0 0 0 / .3);font:15px Roboto,system-ui,sans-serif;max-width:calc(100vw - 32px)';
+      b.innerHTML = '<span>Hay una versión nueva de Brisa</span><button style="border:0;border-radius:10px;padding:9px 14px;background:#A8C7FA;color:#062E6F;font:600 14px Roboto,system-ui,sans-serif;cursor:pointer">Actualizar</button>';
+      b.querySelector('button').onclick = hardReload;
+      document.body.appendChild(b);
+      return true;
+    } catch { return false; }
+  }
+  window.brisaCheckUpdate = checkUpdate;
+  window.addEventListener('load', () => setTimeout(() => checkUpdate(false), 4000));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(false); });
+  setInterval(() => { if (document.visibilityState === 'visible') checkUpdate(false); }, 5 * 60 * 1000);
+
   // "brisa": avisa a la interfaz que corre con servidor propio (tareas, adjuntos, seguimiento, programados).
   const caps = { mcp, sample: Object.freeze(sample), dictation: makeDictation(), db, user, desktop, brisa: Object.freeze({ server: true }) };
   // La IA dentro de Brisa solo existe si el servidor tiene clave; si no, la interfaz ofrece "Pedir a Claude".
