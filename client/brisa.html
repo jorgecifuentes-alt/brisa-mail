@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <script type="application/json" id="claude-artifacts-manifest">{"permissions": ["notifications"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap">
 <style>
 /* Layout: Spark-style three panes — flat grey sidebar, card-sectioned smart inbox, white reading pane; one pane on phones */
 :root{
@@ -640,6 +640,66 @@ body{-webkit-font-smoothing:antialiased}
   .row .av{width:40px;height:40px;font-size:14px}
   .row{grid-template-columns:40px minmax(0,1fr);padding:10px 16px 10px 22px}
 }
+/* ===== Celular: igual a Spark para Android ===== */
+#calBtn{display:none}
+.clip-b{display:none!important}
+@media (max-width:760px){
+  :root{--f-ui:Roboto,"Google Sans Text",system-ui,-apple-system,"Segoe UI",sans-serif;--f-display:Roboto,system-ui,sans-serif;
+    --sp-ink:#1F1F1F;--sp-sub:#202124;--sp-muted:#5F6368;--sp-prev:#8E9196;--sp-cnt:#CDD0D5;--sp-chip:#D3D5DA;--sp-blue:#3C7DE8}
+  body{font-family:var(--f-ui)}
+  .tabbar{display:none!important}
+  .listpane{padding-bottom:0!important}
+  .fabs{bottom:calc(26px + env(safe-area-inset-bottom,0px));right:max(18px,env(safe-area-inset-right,0px));gap:22px}
+  .fabs button{width:64px;height:64px;border-radius:20px;box-shadow:0 2px 6px rgb(0 0 0 / .15),0 1px 2px rgb(0 0 0 / .1)}
+  .fabs .ai{background:#FFFFFF;color:#3C7DE8}
+  .fabs .cmp{background:#D3E3FD;color:#0B57D0}
+  .fabs button svg{width:28px;height:28px}
+  .app.reading .ask-pill{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  #calBtn{display:grid}
+  .list-head{padding:14px 10px 6px 8px}
+  .list-head .top{gap:2px}
+  .menu-btn{width:48px;height:48px}.menu-btn svg{width:26px;height:26px}
+  .list-head .icon-btn{width:48px;height:48px;color:#444746}
+  .list-head .icon-btn svg{width:25px;height:25px}
+  .ttl{padding:0 8px}
+  .ttl b{font:400 23px/1.25 var(--f-ui);color:var(--sp-ink);gap:6px}
+  .ttl b::after{border-width:6px;margin-top:8px}
+  .ttl small{font:400 14px/1.3 var(--f-ui);color:var(--sp-muted);letter-spacing:.01em}
+  .sec-h{padding:18px 20px 14px 20px;gap:24px;color:var(--sp-muted)}
+  .sec-h svg{width:24px;height:24px;stroke-width:1.7;color:var(--sp-muted)}
+  .sec-h span{font:400 16px var(--f-ui);color:var(--sp-muted)}
+  .sec-h button svg{width:26px;height:26px;color:#3C4043}
+  .row{grid-template-columns:40px minmax(0,1fr);gap:14px;padding:14px 16px 14px 22px}
+  .row .av{width:40px;height:40px;font:500 15px var(--f-ui);box-shadow:none;margin-top:0;align-self:center}
+  .udot{left:9px;top:50%;width:6px;height:6px;margin-top:-3px}
+  .r-top{gap:7px}
+  .ibar{width:3px;height:15px;background:#EA4335;border-radius:2px}
+  .r-from{font:500 16.5px/1.35 var(--f-ui);color:var(--sp-ink);letter-spacing:0}
+  .row.unread .r-from{font-weight:500}
+  .r-time{font:400 13px var(--f-ui);color:var(--sp-muted);letter-spacing:.01em}
+  .r-mid{gap:7px;margin-top:2px}
+  .r-mid .r-subj{font:500 15.5px/1.35 var(--f-ui);color:var(--sp-sub);letter-spacing:.005em}
+  .row:not(.unread) .r-mid .r-subj{font-weight:400}
+  .bolt{color:#F2681C}.bolt svg{width:18px;height:18px}
+  .cnt{background:var(--sp-cnt);color:#fff;border-radius:6px;height:22px;min-width:24px;font:500 13px var(--f-ui)}
+  .clip-t{display:none!important}
+  .clip-b{display:inline-flex!important;color:#8E9196}.clip-b svg{width:18px;height:18px}
+  .r-bot{margin-top:2px}
+  .r-bot .r-prev{font:400 15px/1.35 var(--f-ui);color:var(--sp-prev)}
+  .chips{margin-top:8px}
+  .chip{background:var(--sp-chip);color:#fff;font:500 13.5px var(--f-ui);padding:3px 12px;border-radius:999px;letter-spacing:.02em}
+  .sec.prio .row{background:#FEF3E6}
+  .showall{color:var(--sp-blue)!important;font:400 16.5px var(--f-ui);padding:22px 0 26px}
+  .sec{margin:0}
+  .list{padding-bottom:120px}
+}
+@media (max-width:760px) and (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
+  :root:not([data-theme="light"]) .sec.prio .row{background:#33261A}
+  :root:not([data-theme="light"]) .fabs .ai{background:#2A2C31}:root:not([data-theme="light"]) .fabs .cmp{background:#1E3A66;color:#C2D7FF}
+  :root:not([data-theme="light"]) .list-head .icon-btn,:root:not([data-theme="light"]) .sec-h button svg{color:#C4C7C5}}
+@media (max-width:760px){:root[data-theme="dark"]{--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
+  :root[data-theme="dark"] .sec.prio .row{background:#33261A}
+  :root[data-theme="dark"] .fabs .ai{background:#2A2C31}:root[data-theme="dark"] .fabs .cmp{background:#1E3A66;color:#C2D7FF}}
 </style>
 
 <div class="app" id="app">
@@ -666,6 +726,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir carpetas"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <h1 id="listTitle">Bandeja inteligente</h1><button class="ttl" id="ttl"><b id="ttlMain">Bandeja</b><small id="ttlSub">Elementos no leídos</small></button>
         <button class="icon-btn" id="searchBtn" aria-label="Buscar" title="Buscar (/)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+        <a class="icon-btn" id="calBtn" href="https://calendar.google.com/" target="_blank" rel="noopener" aria-label="Calendario" title="Calendario"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><rect x="8" y="13" width="3" height="3" rx=".5" style="fill:currentColor"/></svg></a>
         <button class="icon-btn" id="refreshBtn" aria-label="Actualizar" title="Actualizar" hidden><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></button>
         <button class="icon-btn" id="settingsBtn" aria-label="Ajustes" title="Firma y plantillas"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
         <button class="icon-btn" id="composeBtn2" aria-label="Redactar"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
@@ -796,7 +857,7 @@ function fmt(t){
   const d=new Date(t),n=new Date(),diff=Date.now()-t;
   if(diff>=0&&diff<H)return Math.max(1,Math.round(diff/MIN))+' min';
   const same=(a,b)=>a.toDateString()===b.toDateString();
-  const hm=d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const hm=window.matchMedia&&window.matchMedia('(max-width:760px)').matches?d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false});
   if(same(d,n))return hm;
   const y=new Date(n);y.setDate(n.getDate()-1);if(same(d,y))return 'Ayer';
   const tm=new Date(n);tm.setDate(n.getDate()+1);if(same(d,tm))return 'Mañana '+hm;
@@ -865,7 +926,8 @@ function listFor(f){
 }
 const getMail=id=>S.mode==='demo'?mails.find(m=>m.id===id):G.map[id];
 /* ---------- Secciones de la bandeja inteligente ---------- */
-const SECS=[{id:'prio',label:'Prioridad',icon:'bolt'},{id:'people',label:'Personas',icon:'mailI'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'}];
+const isMob=()=>window.matchMedia('(max-width:760px)').matches;
+const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:'boltL'},{id:'people',label:'Personas',mlabel:'Personal',icon:'mailI',micon:'person'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'}];
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
 const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important)||(PREF.prioSenders||[]).includes(senderOf(m))));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
@@ -908,7 +970,7 @@ function fromThread(p,id){
   Object.assign(m,{gm:true,subject:decode(lm.subject||ms[0].subject||'')||'(sin asunto)',snippet:decode(lm.snippet||''),
     t:+lm.internalDate||Date.parse(lm.date)||0,unread:labels.has('UNREAD'),pinned:labels.has('STARRED'),trash:labels.has('TRASH'),
     inInbox:labels.has('INBOX'),sent:allSent,from:parseAddr((incoming||lm).sender,dn),to:parseAddr((lm.toRecipients||[])[0],dn),
-    count:p.messageCount||ms.length,cat:catOf(labels),important:labels.has('IMPORTANT'),
+    count:p.messageCount||ms.length,cat:catOf(labels),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
     parts:[...new Set(ms.map(x=>{const a=parseAddr(x.sender,dn);return (x.labelIds||[]).includes('SENT')?'Yo':String(a.name||'').split(/\s+/)[0]}).filter(Boolean))],url:typeof p.viewUrl==='string'&&p.viewUrl.startsWith('https://mail.google.com/')?p.viewUrl:null,dn});
   return m;
 }
@@ -1070,7 +1132,7 @@ function people(m){
 function rowHTML(m,sec){
   const who=m.sent?m.to:m.from;
   const n=m.msgs?m.msgs.length:(m.count||1);
-  const clip=m.attach||(m.msgs&&m.msgs.some(x=>x.attach&&x.attach.length));
+  const clip=m.attach||m.hasAtt||(m.msgs&&m.msgs.some(x=>x.attach&&x.attach.length));
   const su=snoozeUntil(m);
   const snz=su&&su>Date.now()?`<span class="tag snz">Vuelve ${esc(fmt(su))}</span> `:'';
   const pr=isPrio(m);
@@ -1078,8 +1140,8 @@ function rowHTML(m,sec){
     ${m.unread?'<span class="udot" aria-label="Sin leer"></span>':''}${avatar(who)}
     <div class="rb">
       <div class="r-top">${m.important?'<span class="ibar" title="Importante"></span>':''}<span class="r-from">${m.sent?'Para: ':''}${esc(people(m))}</span><span class="r-time">${esc(fmt(time(m)))}</span></div>
-      <div class="r-mid">${pr?`<span class="bolt" title="Prioridad">${ic.bolt}</span>`:''}<span class="r-subj">${esc(m.subject)}</span>${m.pinned?`<span class="rpin" title="Anclado">${ic.pinF}</span>`:''}${n>1?`<span class="cnt">${n}</span>`:''}${clip?`<span class="clip">${ic.clip}</span>`:''}</div>
-      <div class="r-bot"><span class="r-prev">${snz}${esc(preview(m))}</span></div>
+      <div class="r-mid">${pr?`<span class="bolt" title="Prioridad">${ic.bolt}</span>`:''}<span class="r-subj">${esc(m.subject)}</span>${m.pinned?`<span class="rpin" title="Anclado">${ic.pinF}</span>`:''}${n>1?`<span class="cnt">${n}</span>`:''}${clip?`<span class="clip clip-t">${ic.clip}</span>`:''}</div>
+      <div class="r-bot"><span class="r-prev">${snz}${esc(preview(m))}</span>${clip?`<span class="clip clip-b">${ic.clip}</span>`:''}</div>
       ${m.important&&m.cat==='people'?'<div class="chips"><span class="chip">Importantes</span></div>':''}
     </div>
     ${m.trash?'':`<div class="hover-acts">
@@ -1102,7 +1164,8 @@ function secCard(sec){
   if(!items.length)return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span></div><div class="loading"><div class="sk"></div></div></section>`;
   const shown=items.slice(0,3);visible.push(...shown);
   const clear=['people','notif','news'].includes(sec.id);
-  return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
+  const lab=isMob()&&sec.mlabel?sec.mlabel:sec.label,icn=ic[isMob()&&sec.micon?sec.micon:sec.icon];
+  return `<section class="sec card ${sec.id}"><div class="sec-h">${icn}<span>${lab}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
     ${shown.map(m=>rowHTML(m,sec.id)).join('')}
     ${count>shown.length?`<button class="showall" data-section="${sec.id}">Mostrar todo (${count})</button>`:''}</section>`;
 }
@@ -1120,8 +1183,8 @@ function renderList(){
   $('#listTitle').textContent=S.q&&S.folder!=='notes'&&S.folder!=='team'?'Resultados':f.label;
   const isInbox=S.folder==='smart'&&!S.q;
   $('#ttl').classList.toggle('plain',!isInbox);
-  $('#ttlMain').textContent=isInbox?'Bandeja de entrada':(S.q&&S.folder!=='notes'&&S.folder!=='team'?'Resultados':f.label);
-  $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:'Tarjetas no leídas',simple:'Lista simple'}[PREF.inboxType||'unread']):'';
+  $('#ttlMain').textContent=isInbox?(isMob()?'Bandeja':'Bandeja de entrada'):(S.q&&S.folder!=='notes'&&S.folder!=='team'?'Resultados':f.label);
+  $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:isMob()?'Elementos no leídos':'Tarjetas no leídas',simple:'Lista simple'}[PREF.inboxType||'unread']):'';
   $('#ttlSub').hidden=!isInbox;
   const L=$('#list');visible=[];
   if(S.folder==='notes')return renderNotesList(L);
@@ -1780,6 +1843,7 @@ $('#q').addEventListener('input',e=>{
 });
 $('#composeBtn').onclick=()=>openCompose();$('#composeBtn2').onclick=()=>openCompose();$('#fab').onclick=()=>openCompose();
 $('#settingsBtn').onclick=openSettings;
+let _mob=isMob();window.addEventListener('resize',()=>{if(isMob()!==_mob){_mob=isMob();renderAll()}});
 $('#railMore').onclick=e=>{e.stopPropagation();$('#app').classList.toggle('drawer')};
 $('#sideSettings').onclick=()=>{$('#app').classList.remove('drawer');openSettings()};
 $('#tabbar').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;if(b.dataset.tab==='more'){$('#app').classList.add('drawer');return}goFolder(b.dataset.tab)});
