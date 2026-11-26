@@ -1143,6 +1143,10 @@ const feedOn=()=>(PREF.inboxType||'unread')==='goals';
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
 const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important&&PREF.prioImportant!==false)||(PREF.prioSenders||[]).includes(senderOf(m))));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
+// Vistas por nombre: cuentan la semana actual, desde el lunes 00:00 (cada lunes parte de cero).
+const weekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
+const byName=()=>S.folder==='smart'&&(namesMode()||sortCfg().by==='from');
+const weekLabel=()=>'Semana del '+new Date(weekStart()).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'short'});
 function secQuery(id){
   const u=(PREF.inboxType||'unread')==='unread'&&!['pinned','all','seen'].includes(id)?' is:unread':'';
   const ps=(PREF.prioSenders||[]).slice(0,20),fr=ps.length?'from:('+ps.join(' OR ')+')':'';
@@ -1150,12 +1154,13 @@ function secQuery(id){
   const notP=(useImp?' -is:important':'')+(fr?' -'+fr:'');
   return {prio:useImp?'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u:(fr?'in:inbox '+fr+u:null),people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
-    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred'+notP,all:'in:inbox',
+    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred'+notP,all:byName()?'in:inbox after:'+ymd(weekStart()-D):'in:inbox',
     search:buildQuery(),files:'has:attachment -in:trash newer_than:180d',feed:'in:inbox'+notP}[id];
 }
 function secItems(id){
   if(S.mode==='demo'){
     if(id==='search')return mails.filter(m=>!m.blocked&&matchLocal(m)).sort(byTime);
+    if(id==='all'&&byName()){const wk=weekStart();return mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&time(m)>=wk).sort(byTime)}
     if(id==='files')return mails.filter(m=>m.attach&&!m.trash&&!m.blocked).sort(byTime);
     if(id==='feed')return mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!isPrio(m)).sort(byTime);
     const t=PREF.inboxType||'unread';
@@ -1164,7 +1169,8 @@ function secItems(id){
     return l.sort(byTime);
   }
   const st=G.secs[id];if(!st)return [];
-  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
+  const wk=id==='all'&&byName()?weekStart():0;
+  return st.ids.map(x=>G.map[x]).filter(m=>m&&(!wk||time(m)>=wk)&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
 }
 /* ---------- Proyectos con color ---------- */
 const PCOL=['#2F6FE4','#E5484D','#2B9348','#9C36B5','#E8742C','#0B8DA3','#C2185B','#6D4C41'];
@@ -1241,7 +1247,7 @@ function sortedRows(items,sec){
     items.forEach(m=>{const g=rowName(m)||'(sin nombre)',k=norm(g);if(!cur||cur.k!==k){cur={k,g,list:[]};groups.push(cur)}cur.list.push(m)});
     const allC=!!PREF.groupsCollapsed;S.gToggle=S.gToggle||{};
     const tun=items.filter(m=>m.unread).length;
-    let h=`<div class="gall"><span class="gsum">${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span><button class="ghost" data-gall>${allC?'Expandir todo':'Contraer todo'}</button></div>`;
+    let h=`<div class="gall"><span class="gsum">${S.folder==='smart'&&byName()?esc(weekLabel())+' · ':''}${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span><button class="ghost" data-gall>${allC?'Expandir todo':'Contraer todo'}</button></div>`;
     groups.forEach(gr=>{const closed=allC!==!!S.gToggle[gr.k],un=gr.list.filter(m=>m.unread).length;
       h+=`<button class="gh ${closed?'closed':''} ${un?'unread':''}" data-gcol="${esc(gr.k)}" aria-expanded="${!closed}"><span>${esc(gr.g)}</span>${un?`<em class="nun" title="${un} sin leer">${un}</em>`:''}<small title="${gr.list.length} en total">${gr.list.length}</small>${ic.chevR}</button>`;
       if(!closed)h+=gr.list.map(m=>rowHTML(m,sec)).join('')});
@@ -1403,7 +1409,7 @@ async function loadFolder(f,force){
 async function loadSec(id,o={}){
   if(!secQuery(id)){G.secs[id]={ids:[],count:0,token:null};schedule();return}
   const st=G.secs[id]||(G.secs[id]={ids:[],count:0,token:null});
-  if(st.loading)return;st.loading=true;st.err=null;schedule();
+  if(st.loading)return;st.loading=true;st.err=null;st.q=secQuery(id);schedule();
   try{
     const input={query:secQuery(id),pageSize:o.size||3,view:'THREAD_VIEW_IDS_ONLY'};
     if(o.more&&st.token)input.pageToken=st.token;
@@ -1416,6 +1422,8 @@ async function loadSec(id,o={}){
     await pool(ids.filter(x=>!G.map[x]||G.map[x].subject===undefined),6,async x=>{fromThread(await gcall('get_thread',{threadId:x,messageFormat:'MINIMAL'},RCACHE),x);schedule()});
   }catch(e){st.err=e}
   st.loading=false;schedule();
+  // Semana por nombre: traer todas las páginas de la semana (hasta 500 conversaciones), no solo las primeras.
+  if(id==='all'&&byName()&&!st.err&&st.token&&st.ids.length<500)loadSec('all',{more:true,size:50});
 }
 async function loadSmart(force){
   if(!caps.mcp)return;
@@ -1609,7 +1617,7 @@ function fullList(id,label){
     const groups=[...by.entries()].sort((a,b)=>(desc?-1:1)*col.compare(a[1].name,b[1].name));
     S.openName=S.openName||{};
     const tun=items.filter(m=>m.unread).length;
-    let h=`<div class="gall"><span class="gsum">${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span></div><section class="sec card full names">`,letter='';
+    let h=`<div class="gall"><span class="gsum">${S.folder==='smart'&&byName()?esc(weekLabel())+' · ':''}${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span></div><section class="sec card full names">`,letter='';
     groups.forEach(([k,g])=>{const L=(g.name[0]||'#').toUpperCase();if(L!==letter){letter=L;h+=`<div class="dayh">${esc(L)}</div>`}
       const un=g.list.filter(m=>m.unread).length,open=!!S.openName[k];
       h+=`<button class="nrow ${un?'unread':''} ${open?'open':''}" data-nexp="${esc(k)}" aria-expanded="${open}">${un?'<i class="udot"></i>':''}${avatar(g.p||{name:g.name})}<b>${esc(g.name)}</b>${un?`<em class="nun" title="${un} sin leer">${un}</em>`:''}<span class="ncnt" title="${g.list.length} en total">${g.list.length}</span>${ic.chevR}</button>`;
@@ -1620,7 +1628,7 @@ function fullList(id,label){
   }
   if(id==='all'&&namesMode()&&S.nameQ&&!items.length)return `<div class="empty"><b>Nadie con ese nombre</b>No hay correos cargados de «${esc(S.nameQ)}». <button class="ghost" data-namesearch>Buscar en todo el correo</button></div>`+(st&&st.token?`<button class="showall" data-loadmore="all">Cargar más</button>`:'');
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
-  h+=items.length?`<section class="sec card full ${id==='search'?'results':id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
+  h+=items.length?`<section class="sec card full ${id==='search'?'results':id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':id==='all'&&S.folder==='smart'&&byName()?`<div class="empty"><b>Sin correos esta semana</b>Desde el lunes no ha llegado nada a tu bandeja. Cada lunes la cuenta parte de cero.</div>`:`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
   if(st&&st.loading)h+=skeleton('Cargando correos…');
   else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
   return h;
@@ -1697,7 +1705,7 @@ function renderList(){
   const type=PREF.inboxType||'unread';
   // Ordenada por nombre, asunto o importancia: toda la bandeja en una sola lista (como Outlook).
   if(type==='simple'||sortOn()){
-    if(S.mode==='gmail'&&!G.secs.all){G.secs.all={ids:[],count:0,token:null,loading:false};setTimeout(()=>loadSec('all',{size:30}),0);html+=skeleton('Cargando…');L.innerHTML=html;return}
+    if(S.mode==='gmail'&&(!G.secs.all||(!G.secs.all.loading&&G.secs.all.q&&G.secs.all.q!==secQuery('all')))){G.secs.all={ids:[],count:0,token:null,loading:false};setTimeout(()=>loadSec('all',{size:50}),0);html+=skeleton('Cargando…');L.innerHTML=html;return}
     html+=fullList('all','');L.innerHTML=html;return}
   if(S.section){const sec=SECS.find(x=>x.id===S.section);html+=fullList(S.section,sec?sec.label:'');L.innerHTML=html;return}
   const gate=S.mode==='demo'?mails.filter(m=>demoIn(m,'smart')&&m.newSender):[];
