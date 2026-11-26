@@ -717,6 +717,20 @@ body{-webkit-font-smoothing:antialiased}
 .ho-btns button{display:inline-flex;align-items:center;gap:6px}
 .ho-btns svg{width:17px;height:17px}
 .ai-input textarea#aiInput{min-height:48px}
+/* Mapa mental ampliado */
+.mind{cursor:zoom-in}
+.mapview{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.mv-bar{display:flex;align-items:center;gap:6px;padding:10px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.mv-bar b{flex:1;font:600 16px var(--f-ui);display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mv-bar b svg{width:20px;height:20px;color:var(--accent);flex:none}
+.mv-bar button{min-width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--muted);font:600 18px var(--f-ui);padding:0 8px}
+.mv-bar button:hover{background:var(--sunk);color:var(--fg)}
+.mv-bar button svg{width:20px;height:20px}
+.mv-bar .mv-pct{font:500 13px var(--f-ui);min-width:48px;color:var(--faint)}
+.mv-stage{flex:1;overflow:auto;touch-action:none;cursor:grab;display:grid;place-items:center;padding:24px}
+.mv-stage.drag{cursor:grabbing}
+.mv-stage svg{display:block;max-width:none;flex:none}
+.mv-hint{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;padding:7px 14px;border-radius:999px;opacity:.85;pointer-events:none;white-space:nowrap}
 </style>
 
 <div class="app" id="app">
@@ -1261,7 +1275,7 @@ function aiCards(key){
   if(s)h+=`<div class="ai-card"><h3>${ic.spark}Resumen</h3><button class="icon-btn x" data-aiclose="sum" aria-label="Cerrar resumen">${ic.x}</button><div class="txt" id="aiSum">${esc(s.text||(s.busy?'Pensando…':''))}</div>${s.err?`<p class="hint">${esc(s.err)}</p>`:''}</div>`;
   const mp=AI.map[key];
   if(mp)h+=`<div class="ai-card mapcard"><h3>${ic.tree}Mapa mental</h3><button class="icon-btn x" data-aiclose="map" aria-label="Cerrar mapa">${ic.x}</button>
-    ${mp.busy?'<div class="txt">Armando el mapa…</div>':mp.err?`<p class="hint">${esc(mp.err)}</p>`:`<div class="mind">${mindSVG(mp.data)}</div><div class="src-row" style="margin-top:8px"><button data-copyoutline>Copiar como esquema</button></div>`}</div>`;
+    ${mp.busy?'<div class="txt">Armando el mapa…</div>':mp.err?`<p class="hint">${esc(mp.err)}</p>`:`<div class="mind" data-outline="${esc(outline(mp.data))}" title="Doble clic para ampliar">${mindSVG(mp.data)}</div><div class="src-row" style="margin-top:8px"><button data-mapzoom>Ampliar</button><button data-copyoutline>Copiar como esquema</button></div>`}</div>`;
   return h;
 }
 const aiLive=()=>!!caps.sample&&!aiOff;
@@ -2126,7 +2140,7 @@ function renderChat(){
   const ctx=openMailCtx();
   P.querySelector('.ai-ctx').textContent=ctx?(ctx.tipo==='correo'?'Viendo: '+ctx.asunto:'Viendo la nota: '+ctx.titulo):(S.mode==='gmail'?'Conectado a tu correo':'Usando los correos de ejemplo');
   if(!CHAT.items.length){log.innerHTML=`<div class="ai-hello"><b>¿En qué te ayudo?</b>Puedo revisar tu bandeja, resumir hilos, buscar correos, preparar respuestas y armar mapas mentales. Nunca envío nada sin que lo revises.<div class="ai-chips">${AI_CHIPS.map(c=>`<button data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>`;}
-  else log.innerHTML=CHAT.items.map((it,i)=>it.kind==='map'?`<div class="ai-msg map"><div class="mind">${mindSVG(it.data)}</div><div class="src-row" style="margin-top:6px"><button data-copymap="${i}">Copiar como esquema</button></div></div>`
+  else log.innerHTML=CHAT.items.map((it,i)=>it.kind==='map'?`<div class="ai-msg map"><div class="mind" data-outline="${esc(outline(it.data))}" title="Doble clic para ampliar">${mindSVG(it.data)}</div><div class="src-row" style="margin-top:6px"><button data-mapzoom>Ampliar</button><button data-copymap="${i}">Copiar como esquema</button></div></div>`
     :it.kind==='act'?`<div class="ai-act">${ic.check}${esc(it.text)}</div>`
     :`<div class="ai-msg ${it.role==='user'?'user':'bot'}${it.err?' err':''}${it.busy?' busy':''}" data-i="${i}">${esc(it.text||'')}</div>`).join('');
   log.scrollTop=log.scrollHeight;
@@ -2239,6 +2253,60 @@ $('#aiPanel').addEventListener('click',e=>{
   if(e.target.closest('[data-hsend]')){handoffSend();return}
   if(e.target.closest('[data-hcopy]')){copy(handoffText());return}
 });
+
+
+/* ---------- Mapa mental ampliado (doble clic / doble toque / botón Ampliar) ---------- */
+function openMapView(mindEl){
+  const svg0=mindEl&&mindEl.querySelector('svg');if(!svg0)return;
+  const vb=(svg0.getAttribute('viewBox')||'0 0 600 400').split(/\s+/).map(Number),W=vb[2],H=vb[3];
+  const title=(svg0.getAttribute('aria-label')||'Mapa mental').replace(/^Mapa mental:\s*/,'');
+  const outlineText=mindEl.dataset.outline||'';
+  document.querySelector('.mapview')?.remove();
+  const v=document.createElement('div');v.className='mapview';v.setAttribute('role','dialog');v.setAttribute('aria-label','Mapa mental ampliado');
+  v.innerHTML=`<div class="mv-bar"><b>${ic.tree}<span>${esc(title)}</span></b>
+    <button data-mv="out" aria-label="Alejar" title="Alejar">−</button><span class="mv-pct" aria-live="polite"></span><button data-mv="in" aria-label="Acercar" title="Acercar">+</button>
+    <button data-mv="fit" aria-label="Ajustar a la pantalla" title="Ajustar a la pantalla"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    ${outlineText?`<button data-mv="copy" aria-label="Copiar como esquema" title="Copiar como esquema">${ic.copy}</button>`:''}
+    <button data-mv="close" aria-label="Cerrar" title="Cerrar (Esc)">${ic.x}</button></div>
+    <div class="mv-stage"></div><div class="mv-hint">${isMob()?'Pellizca para acercar · arrastra para moverte':'Rueda del mouse o + / − para acercar · arrastra para moverte'}</div>`;
+  document.body.appendChild(v);
+  const stage=v.querySelector('.mv-stage'),pct=v.querySelector('.mv-pct');
+  const svg=svg0.cloneNode(true);svg.removeAttribute('width');svg.removeAttribute('height');stage.appendChild(svg);
+  setTimeout(()=>v.querySelector('.mv-hint')?.remove(),3500);
+  let scale=1;
+  const fitScale=()=>Math.max(.2,Math.min((stage.clientWidth-48)/W,(stage.clientHeight-48)/H,4));
+  const apply=(ns,cx,cy)=>{
+    ns=Math.max(.2,Math.min(6,ns));
+    const r=stage.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;
+    const px=(stage.scrollLeft+cx-r.left)/scale,py=(stage.scrollTop+cy-r.top)/scale;
+    scale=ns;svg.style.width=Math.round(W*scale)+'px';svg.style.height=Math.round(H*scale)+'px';
+    stage.style.placeItems=(W*scale<stage.clientWidth&&H*scale<stage.clientHeight)?'center':'start';
+    stage.scrollLeft=px*scale-(cx-r.left);stage.scrollTop=py*scale-(cy-r.top);
+    pct.textContent=Math.round(scale*100)+'%';
+  };
+  apply(fitScale());
+  const close=()=>{v.remove();document.removeEventListener('keydown',onKey,true)};
+  const onKey=e=>{if(e.key==='Escape'){e.stopPropagation();close()}else if(e.key==='+'||e.key==='='){apply(scale*1.25)}else if(e.key==='-'){apply(scale/1.25)}};
+  document.addEventListener('keydown',onKey,true);
+  v.querySelector('.mv-bar').onclick=e=>{const b=e.target.closest('[data-mv]');if(!b)return;const k=b.dataset.mv;
+    if(k==='close')close();else if(k==='in')apply(scale*1.25);else if(k==='out')apply(scale/1.25);else if(k==='fit')apply(fitScale());else if(k==='copy')copy(outlineText)};
+  stage.addEventListener('wheel',e=>{e.preventDefault();apply(scale*(e.deltaY<0?1.12:1/1.12),e.clientX,e.clientY)},{passive:false});
+  // Arrastrar para moverse y pellizcar para acercar.
+  const pts=new Map();let last=null,pinch=null,lastTap=0;
+  stage.addEventListener('pointerdown',e=>{stage.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:scale}}else{last={x:e.clientX,y:e.clientY};stage.classList.add('drag')}
+    if(e.pointerType!=='mouse'&&pts.size===1){const now=Date.now();if(now-lastTap<300)apply(scale<fitScale()*1.5?scale*2:fitScale(),e.clientX,e.clientY);lastTap=now}});
+  stage.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&pinch){const [a,b]=[...pts.values()];apply(pinch.s*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2)}
+    else if(last){stage.scrollLeft-=e.clientX-last.x;stage.scrollTop-=e.clientY-last.y;last={x:e.clientX,y:e.clientY}}});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size){last=null;stage.classList.remove('drag')}else{const p=[...pts.values()][0];last={x:p.x,y:p.y}}};
+  stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+  stage.addEventListener('dblclick',e=>apply(scale<fitScale()*1.5?scale*2:fitScale(),e.clientX,e.clientY));
+  v.querySelector('[data-mv="close"]').focus();
+}
+document.addEventListener('dblclick',e=>{const m=e.target.closest('.mind');if(m&&!e.target.closest('.mapview')){e.preventDefault();openMapView(m)}});
+(function(){let t=0,el=null;document.addEventListener('touchend',e=>{const m=e.target.closest&&e.target.closest('.mind');if(!m||e.target.closest('.mapview'))return;const now=Date.now();if(el===m&&now-t<320){e.preventDefault();t=0;openMapView(m)}else{t=now;el=m}},{passive:false})})();
+document.addEventListener('click',e=>{const z=e.target.closest('[data-mapzoom]');if(!z)return;const m=z.closest('.ai-card,.ai-msg')?.querySelector('.mind');if(m)openMapView(m)});
 
 /* ---------- Arranque ---------- */
 loadLocal();
