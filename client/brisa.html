@@ -170,7 +170,19 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .pop button:hover,.pop button:focus-visible{background:var(--sunk)}
 .pop button span{flex:1}
 .pop button small{font:12px var(--f-mono);color:var(--faint)}
-.nmbox{flex:1 1 100%;display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);min-width:0}
+.nrow{display:flex;align-items:center;gap:12px;width:100%;padding:8px 14px 8px 18px;text-align:left;position:relative;color:var(--fg)}
+.nrow:hover{background:var(--sunk)}
+.nrow .av{width:30px;height:30px;font-size:11.5px;flex:none}
+.nrow b{flex:1;min-width:0;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nrow.unread b{font-weight:700}
+.nrow .udot{left:6px;top:50%;margin-top:-3.5px}
+.nrow .ncnt{font-size:12.5px;color:var(--faint)}
+.nrow svg{width:16px;height:16px;color:var(--faint);transition:transform .15s}
+.nrow.open svg{transform:rotate(90deg)}
+.nrow.open{background:var(--sunk)}
+.fchip.ncol{flex:none}
+@media (max-width:760px){.nrow{padding:12px 16px 12px 22px;gap:14px}.nrow .av{width:40px;height:40px;font-size:14px}.nrow b{font:500 16.5px var(--f-ui)}.nrow .udot{left:9px}}
+.nmbox{flex:1 1 180px;display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);min-width:0}
 .nmbox .i{width:16px;height:16px;color:var(--faint);flex:none}
 .nmbox input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;color:var(--fg);outline:0;min-width:0}
 .fbar:has(.nmbox){flex-wrap:wrap}
@@ -762,6 +774,7 @@ body{-webkit-font-smoothing:antialiased}
   .chip{font:500 12px var(--f-ui);padding:2px 10px}
   .showall{font:400 14px var(--f-ui);padding:10px 0 14px}
   .dayh{font-size:13px}
+  .nrow{padding:8px 14px 8px 18px;gap:12px}.nrow .av{width:30px;height:30px;font-size:11.5px}.nrow b{font:500 15px var(--f-ui)}.nrow .udot{left:6px}
   .fabs{gap:14px}
   .fabs button{width:52px;height:52px;border-radius:16px}
   .fabs button svg{width:23px;height:23px}
@@ -1190,7 +1203,7 @@ const namesMode=()=>PREF.inboxType==='names';
 const sortCfg=()=>Object.assign(namesMode()?{by:'from',dir:'asc'}:{by:'date',dir:'desc'},PREF.sort||{});
 const sortOn=()=>{const c=sortCfg();return c.by!=='date'||c.dir!=='desc'};
 const sortChip=()=>sortOn()&&(!namesMode()||PREF.sort)?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'';
-const nameBox=()=>`<label class="nmbox">${ic.person}<input id="nameQ" type="search" placeholder="Filtrar por nombre…" value="${esc(S.nameQ||'')}" autocomplete="off" aria-label="Filtrar por nombre"></label>`;
+const nameBox=()=>`<button class="fchip ncol ${PREF.namesCollapsed?'on':''}" data-ncollapse aria-pressed="${!!PREF.namesCollapsed}" title="${PREF.namesCollapsed?'Mostrar los correos':'Ver solo los nombres'}">${PREF.namesCollapsed?'Expandir correos':'Solo nombres'}</button><label class="nmbox">${ic.person}<input id="nameQ" type="search" placeholder="Filtrar por nombre…" value="${esc(S.nameQ||'')}" autocomplete="off" aria-label="Filtrar por nombre"></label>`;
 const dirLabels=by=>by==='from'||by==='subject'?['A → Z','Z → A']:by==='imp'?['Importantes primero','Importantes al final']:['Más recientes arriba','Más antiguos arriba'];
 const sortLabel=()=>{const c=sortCfg(),l=dirLabels(c.by);return 'Orden: '+SORTS.find(x=>x[0]===c.by)[1]+' · '+(c.by==='date'?(c.dir==='desc'?l[0]:l[1]):c.by==='imp'?(c.dir==='desc'?l[0]:l[1]):(c.dir==='asc'?l[0]:l[1]))};
 const rowName=m=>{const p=m.sent?m.to:m.from;return String(p&&(p.name||p.email)||'').trim()};
@@ -1561,6 +1574,21 @@ function fullList(id,label){
   if(id==='all'&&namesMode()&&S.nameQ){const q=norm(S.nameQ);items=items.filter(m=>{const p=m.sent?m.to:m.from;return norm([rowName(m),p&&p.email,people(m)].join(' ')).includes(q)})}
   visible.push(...items);
   const st=S.mode==='gmail'?G.secs[id]:null;
+  if(id==='all'&&namesMode()&&PREF.namesCollapsed&&items.length){
+    const col=new Intl.Collator('es',{sensitivity:'base'}),by=new Map();
+    items.forEach(m=>{const n=rowName(m)||'(sin nombre)',k=norm(n);if(!by.has(k))by.set(k,{name:n,p:m.sent?m.to:m.from,list:[]});by.get(k).list.push(m)});
+    const desc=PREF.sort&&PREF.sort.by==='from'&&PREF.sort.dir==='desc';
+    const groups=[...by.entries()].sort((a,b)=>(desc?-1:1)*col.compare(a[1].name,b[1].name));
+    S.openName=S.openName||{};
+    let h=`<section class="sec card full names">`,letter='';
+    groups.forEach(([k,g])=>{const L=(g.name[0]||'#').toUpperCase();if(L!==letter){letter=L;h+=`<div class="dayh">${esc(L)}</div>`}
+      const un=g.list.filter(m=>m.unread).length,open=!!S.openName[k];
+      h+=`<button class="nrow ${un?'unread':''} ${open?'open':''}" data-nexp="${esc(k)}" aria-expanded="${open}">${un?'<i class="udot"></i>':''}${avatar(g.p||{name:g.name})}<b>${esc(g.name)}</b><span class="ncnt">${g.list.length}</span>${ic.chevR}</button>`;
+      if(open)h+=g.list.map(m=>rowHTML(m,id)).join('')});
+    h+='</section>';
+    if(st&&st.loading)h+=skeleton('Cargando correos…');else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
+    return h;
+  }
   if(id==='all'&&namesMode()&&S.nameQ&&!items.length)return `<div class="empty"><b>Nadie con ese nombre</b>No hay correos cargados de «${esc(S.nameQ)}». <button class="ghost" data-namesearch>Buscar en todo el correo</button></div>`+(st&&st.token?`<button class="showall" data-loadmore="all">Cargar más</button>`:'');
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
   h+=items.length?`<section class="sec card full ${id==='search'?'results':id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
@@ -2332,6 +2360,8 @@ $('#q').addEventListener('input',e=>{
 });
 $('#composeBtn').onclick=()=>openCompose();$('#composeBtn2').onclick=()=>openCompose();$('#fab').onclick=()=>openCompose();
 $('#settingsBtn').onclick=openSettings;
+$('#fbar').addEventListener('click',e=>{if(!e.target.closest('[data-ncollapse]'))return;PREF.namesCollapsed=!PREF.namesCollapsed;S.openName={};savePrefs();$('#fbar').innerHTML=filterBar();renderList()});
+$('#list').addEventListener('click',e=>{const b=e.target.closest('[data-nexp]');if(!b)return;S.openName=S.openName||{};S.openName[b.dataset.nexp]=!S.openName[b.dataset.nexp];renderList()});
 $('#fbar').addEventListener('input',e=>{if(e.target.id!=='nameQ')return;S.nameQ=e.target.value.trim();renderList()});
 $('#list').addEventListener('click',e=>{if(!e.target.closest('[data-namesearch]'))return;S.filters={from:S.nameQ};S.nameQ='';$('.list-head').classList.add('searching');runSearch()});
 $('#filterBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fpanel'))closePop();else openFilterPanel()};
