@@ -1048,7 +1048,7 @@ function secQuery(id){
   const notP=(useImp?' -is:important':'')+(fr?' -'+fr:'');
   return {prio:useImp?'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u:(fr?'in:inbox '+fr+u:null),people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
-    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox',
+    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred'+notP,all:'in:inbox',
     search:buildQuery(),files:'has:attachment -in:trash newer_than:180d',feed:'in:inbox'+notP}[id];
 }
 function secItems(id){
@@ -1057,12 +1057,12 @@ function secItems(id){
     if(id==='files')return mails.filter(m=>m.attach&&!m.trash&&!m.blocked).sort(byTime);
     if(id==='feed')return mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!isPrio(m)).sort(byTime);
     const t=PREF.inboxType||'unread';
-    let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):id==='seen'?mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!m.unread&&!m.pinned&&m.id!==S.sel):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
+    let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):id==='seen'?mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!m.unread&&!m.pinned&&!isPrio(m)&&m.id!==S.sel):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
     if(t==='unread'&&!['pinned','all','seen'].includes(id))l=l.filter(m=>m.unread||m.id===S.sel);
     return l.sort(byTime);
   }
   const st=G.secs[id];if(!st)return [];
-  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','seen','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
+  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
 }
 /* ---------- Proyectos con color ---------- */
 const PCOL=['#2F6FE4','#E5484D','#2B9348','#9C36B5','#E8742C','#0B8DA3','#C2185B','#6D4C41'];
