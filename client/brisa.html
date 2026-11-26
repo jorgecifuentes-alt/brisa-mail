@@ -700,6 +700,14 @@ body{-webkit-font-smoothing:antialiased}
 @media (max-width:760px){:root[data-theme="dark"]{--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
   :root[data-theme="dark"] .sec.prio .row{background:#33261A}
   :root[data-theme="dark"] .fabs .ai{background:#2A2C31}:root[data-theme="dark"] .fabs .cmp{background:#1E3A66;color:#C2D7FF}}
+/* Deslizar hacia abajo para actualizar */
+.ptr{position:absolute;left:50%;top:0;z-index:7;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:var(--panel);box-shadow:0 2px 8px rgb(0 0 0 / .18);display:grid;place-items:center;color:var(--accent);transform:translateY(-60px);opacity:0;pointer-events:none}
+.ptr svg{width:22px;height:22px;stroke-width:2.2}
+.ptr.back{transition:transform .25s ease,opacity .25s ease}
+.ptr.spin svg{animation:ptrspin .8s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ptr.spin svg{animation-duration:2.4s}}
+.list{overscroll-behavior-y:contain}
 </style>
 
 <div class="app" id="app">
@@ -733,6 +741,7 @@ body{-webkit-font-smoothing:antialiased}
       </div>
       <label class="search" id="searchBox"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar personas, asuntos, texto…" autocomplete="off"></label>
     </div>
+    <div class="ptr" id="ptr" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></div>
     <div class="list" id="list" role="listbox" aria-label="Correos"></div>
     <div class="fabs"><button class="ai" id="aiFab2" aria-label="Asistente de IA" title="Asistente de IA (I)"><svg class="i" viewBox="0 0 24 24"><path d="M10 4l1.6 4.6L16 10l-4.4 1.5L10 16l-1.6-4.5L4 10l4.4-1.4zM18 3l.7 1.8L20.5 5.5l-1.8.7L18 8l-.7-1.8L15.5 5.5l1.8-.7zM18 15l.7 1.8 1.8.7-1.8.7L18 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></button><button class="cmp" id="fab2" aria-label="Redactar" title="Redactar (C)"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div>
     <button class="fab" id="fab" aria-label="Redactar" title="Redactar (C)"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
@@ -1931,6 +1940,38 @@ setInterval(()=>{
 },30000);
 
 
+
+
+/* ---------- Deslizar hacia abajo para actualizar ---------- */
+async function pullRefresh(){
+  if(S.mode==='gmail'&&caps.mcp){
+    if(S.folder==='smart'){await loadSmart(true);if(S.section&&S.section!=='all')await loadSec(S.section,{size:25,force:true})}
+    else if(GQ[S.folder])await loadFolder(S.folder,true);
+    else renderAll();
+  }else{renderAll();await new Promise(r=>setTimeout(r,500))}
+  toast('Bandeja actualizada',null,1500);
+}
+(function(){
+  const L=$('#list'),ind=$('#ptr'),TH=72,MAX=110;
+  let y0=null,x0=0,dist=0,busy=false,pulling=false;
+  const place=(d,o)=>{ind.style.transform=`translateY(${d-46}px) rotate(${d*3}deg)`;ind.style.opacity=o};
+  L.addEventListener('touchstart',e=>{if(busy||L.scrollTop>0||e.touches.length!==1)return;y0=e.touches[0].clientY;x0=e.touches[0].clientX;dist=0;pulling=false},{passive:true});
+  L.addEventListener('touchmove',e=>{
+    if(y0===null)return;
+    const dy=e.touches[0].clientY-y0,dx=e.touches[0].clientX-x0;
+    if(!pulling){if(dy<8||Math.abs(dx)>Math.abs(dy)||L.scrollTop>0){if(dy<0||Math.abs(dx)>Math.abs(dy))y0=null;return}pulling=true;ind.classList.remove('back')}
+    e.preventDefault();
+    dist=Math.min(MAX,dy*.5);place(dist,Math.min(1,dist/TH));
+  },{passive:false});
+  const end=async()=>{
+    if(y0===null)return;y0=null;
+    if(!pulling)return;pulling=false;ind.classList.add('back');
+    if(dist<TH){place(0,0);return}
+    busy=true;ind.classList.add('spin');ind.style.transform='translateY(18px)';ind.style.opacity=1;
+    try{await pullRefresh()}finally{busy=false;ind.classList.remove('spin');place(0,0)}
+  };
+  L.addEventListener('touchend',end);L.addEventListener('touchcancel',end);
+})();
 
 /* ---------- Marcar una sección completa como hecha ---------- */
 async function clearSection(id){

@@ -10,18 +10,21 @@
   const err = (code, message, extra) => Object.assign(new Error(message), { code, message }, extra || {});
 
   /* ---------- mcp ---------- */
+  let freshUntil = 0;
   const mcp = Object.freeze({
-    async callTool(server, tool, input) {
+    async callTool(server, tool, input, opts) {
       if (server !== 'Gmail') throw err('server_not_connected', 'Servidor desconocido.');
       let r;
       try {
-        r = await fetch('/api/gmail/' + encodeURIComponent(tool), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input || {}) });
+        const fresh = !!(opts && opts.cache && opts.cache.refresh) || freshUntil > Date.now();
+        r = await fetch('/api/gmail/' + encodeURIComponent(tool), { method: 'POST', headers: { 'content-type': 'application/json', ...(fresh ? { 'x-brisa-fresh': '1' } : {}) }, body: JSON.stringify(input || {}) });
       } catch (e) { throw err('server_unavailable', 'Sin conexión con el servidor.', { retryable: true }); }
       const j = await r.json().catch(() => ({}));
       if (!r.ok || j.error) throw err((j.error && j.error.code) || 'upstream_error', (j.error && j.error.message) || 'Error del servidor.');
       return { content: [], payload: j.payload };
     },
-    async invalidate() {},
+    // Tras invalidar, las próximas lecturas (unos segundos) piden datos frescos al servidor.
+    async invalidate() { freshUntil = Date.now() + 4000; },
     // Vigila una lectura: la repite al instante cuando el servidor avisa de correo nuevo (IMAP IDLE
     // por SSE) y, como respaldo, cada `refetchInterval` (mínimo 60 s).
     watchTool(server, tool, input, handler, opts) {

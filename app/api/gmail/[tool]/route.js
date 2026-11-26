@@ -1,4 +1,4 @@
-import { tools } from '../../../../lib/mail.js';
+import { tools, invalidateScan } from '../../../../lib/mail.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,6 +9,8 @@ export async function POST(req, { params }) {
   if (!fn) return Response.json({ error: { code: 'bad_request', message: 'Herramienta desconocida.' } }, { status: 400 });
   let input = {};
   try { input = await req.json(); } catch { /* sin cuerpo */ }
+  // "Deslizar para actualizar": saltarse el caché corto del servidor.
+  if (req.headers.get('x-brisa-fresh') === '1') invalidateScan();
   try {
     const payload = await fn(input || {});
     return Response.json({ payload });
