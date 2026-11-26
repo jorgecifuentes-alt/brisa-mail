@@ -170,6 +170,11 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .pop button:hover,.pop button:focus-visible{background:var(--sunk)}
 .pop button span{flex:1}
 .pop button small{font:12px var(--f-mono);color:var(--faint)}
+.nmbox{flex:1 1 100%;display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);min-width:0}
+.nmbox .i{width:16px;height:16px;color:var(--faint);flex:none}
+.nmbox input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;color:var(--fg);outline:0;min-width:0}
+.fbar:has(.nmbox){flex-wrap:wrap}
+.thumb.az span{font:700 9px var(--f-ui);color:var(--faint);line-height:1;margin:1px 0 0 2px}
 .fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
 .pop.fpanel{width:300px;padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
 .fpanel .fp-h{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 4px 16px}
@@ -485,9 +490,10 @@ body{-webkit-font-smoothing:antialiased}
 .fabs button:hover{filter:brightness(.97)}
 .fab,.ai-fab{display:none!important}
 .app.ai-open .fabs .ai{visibility:hidden}
-.pick{position:fixed;z-index:42;left:max(8px,env(safe-area-inset-left,0px));top:calc(8px + env(safe-area-inset-top,0px));width:min(440px,calc(100vw - 16px));background:var(--bg);border-radius:22px;box-shadow:0 16px 48px rgb(0 0 0 / .25);padding:18px 16px 20px}
+.pick{position:fixed;z-index:42;left:max(8px,env(safe-area-inset-left,0px));top:calc(8px + env(safe-area-inset-top,0px));width:min(560px,calc(100vw - 16px));background:var(--bg);border-radius:22px;box-shadow:0 16px 48px rgb(0 0 0 / .25);padding:18px 16px 20px}
 .pick h3{margin:0 8px 14px;font:400 18px var(--f-ui);color:var(--muted)}
-.pick .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pick .opts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:480px){.pick .opts{grid-template-columns:repeat(2,1fr);row-gap:18px}}
 .pick .opt{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:14px}
 .pick .opt small{color:var(--muted);font-size:12.5px}
 .pick .opt[aria-pressed="true"] b{color:var(--accent)}
@@ -722,6 +728,44 @@ body{-webkit-font-smoothing:antialiased}
 @media (max-width:760px){:root[data-theme="dark"]{--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
   :root[data-theme="dark"] .sec.prio .row{background:var(--prio-bg)}
   :root[data-theme="dark"] .fabs .ai{background:#2A2C31}:root[data-theme="dark"] .fabs .cmp{background:#1E3A66;color:#C2D7FF}}
+/* Ventana angosta en el computador (mouse): misma letra compacta que Spark de escritorio, no la del celular */
+@media (max-width:760px) and (hover:hover) and (pointer:fine){
+  :root{--f-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;--f-display:var(--f-ui)}
+  .list-head{padding:12px 10px 6px 8px}
+  .menu-btn{width:36px;height:36px}.menu-btn svg{width:20px;height:20px}
+  .list-head .icon-btn{width:36px;height:36px}
+  .list-head .icon-btn svg{width:19px;height:19px}
+  .ttl b{font:600 17px/1.25 var(--f-ui)}
+  .ttl b::after{border-width:4.5px;margin-top:4px}
+  .ttl small{font:400 13px/1.3 var(--f-ui)}
+  .sec-h{padding:12px 16px 8px;gap:12px}
+  .sec-h svg{width:17px;height:17px}
+  .sec-h span{font:500 15px var(--f-ui)}
+  .sec-h button svg{width:20px;height:20px}
+  .row{grid-template-columns:30px minmax(0,1fr);gap:12px;padding:8px 14px 8px 18px}
+  .row .av{width:30px;height:30px;font:600 11.5px var(--f-ui);margin-top:4px;align-self:start}
+  .udot{left:6px;top:22px;margin-top:0;width:7px;height:7px}
+  .r-top{gap:6px}
+  .ibar{height:13px}
+  .r-from{font:600 15px/1.35 var(--f-ui)}
+  .row.unread .r-from{font-weight:700}
+  .r-time{font:400 12.5px var(--f-ui)}
+  .r-mid{gap:6px;margin-top:1px}
+  .r-mid .r-subj{font:500 14.5px/1.35 var(--f-ui)}
+  .row.unread .r-subj{font-weight:600}
+  .bolt svg{width:14px;height:14px}
+  .cnt{height:18px;min-width:20px;font:500 11.5px var(--f-ui);border-radius:5px}
+  .clip-b svg{width:15px;height:15px}
+  .r-bot{margin-top:1px}
+  .r-bot .r-prev{font:400 14px/1.35 var(--f-ui)}
+  .chips{margin-top:4px}
+  .chip{font:500 12px var(--f-ui);padding:2px 10px}
+  .showall{font:400 14px var(--f-ui);padding:10px 0 14px}
+  .dayh{font-size:13px}
+  .fabs{gap:14px}
+  .fabs button{width:52px;height:52px;border-radius:16px}
+  .fabs button svg{width:23px;height:23px}
+}
 /* Deslizar hacia abajo para actualizar */
 .ptr{position:absolute;left:50%;top:0;z-index:7;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:var(--panel);box-shadow:0 2px 8px rgb(0 0 0 / .18);display:grid;place-items:center;color:var(--accent);transform:translateY(-60px);opacity:0;pointer-events:none}
 .ptr svg{width:22px;height:22px;stroke-width:2.2}
@@ -1061,6 +1105,7 @@ function listFor(f){
 const getMail=id=>S.mode==='demo'?mails.find(m=>m.id===id):G.map[id];
 /* ---------- Secciones de la bandeja inteligente ---------- */
 const isMob=()=>window.matchMedia('(max-width:760px)').matches;
+const isPhone=()=>isMob()&&!window.matchMedia('(hover:hover) and (pointer:fine)').matches;
 const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:'boltL'},{id:'people',label:'Personas',mlabel:'Personal',icon:'mailI',micon:'person'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'},{id:'seen',label:'Vistos',icon:'eye'}];
 // "Vistos" junta lo ya leído de la bandeja; solo tiene sentido en "Elementos no leídos".
 const activeSecs=()=>(PREF.inboxType||'unread')==='goals'?SECS.filter(x=>x.id==='prio'):SECS.filter(x=>x.id!=='seen'||(PREF.inboxType||'unread')==='unread');
@@ -1136,13 +1181,16 @@ function matchLocal(m){const f=S.filters;
   const r=dateRange(f);if(r&&(time(m)<r[0]||time(m)>=r[1]))return false;
   if(f.imp&&!m.important)return false;if(f.from&&!norm([m.from.name,m.from.email,m.to&&m.to.name,m.to&&m.to.email].join(' ')).includes(norm(f.from)))return false;if(f.proj&&(projOf(m)||{}).name!==f.proj)return false;return true}
 function filterBar(){const f=S.filters,ch=(k,l,on)=>`<button class="fchip ${on?'on':''}" data-filter="${esc(k)}" aria-pressed="${!!on}">${l}</button>`;
-  if(!searchActive()&&!$('.list-head').classList.contains('searching'))return sortOn()?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'';
-  return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(f.date?`<button class="fchip on" data-filter="date">${esc(dateLabel(f))} ✕</button>`:'')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')+(sortOn()?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'')}
+  if(!searchActive()&&!$('.list-head').classList.contains('searching'))return (namesMode()&&S.folder==='smart'?nameBox():'')+sortChip();
+  return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(f.date?`<button class="fchip on" data-filter="date">${esc(dateLabel(f))} ✕</button>`:'')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')+sortChip()}
 
 /* ---------- Ordenar (como en Outlook): fecha, nombre, asunto o importancia ---------- */
 const SORTS=[['date','Fecha'],['from','De (nombre)'],['subject','Asunto'],['imp','Importancia']];
-const sortCfg=()=>Object.assign({by:'date',dir:'desc'},PREF.sort||{});
+const namesMode=()=>PREF.inboxType==='names';
+const sortCfg=()=>Object.assign(namesMode()?{by:'from',dir:'asc'}:{by:'date',dir:'desc'},PREF.sort||{});
 const sortOn=()=>{const c=sortCfg();return c.by!=='date'||c.dir!=='desc'};
+const sortChip=()=>sortOn()&&(!namesMode()||PREF.sort)?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'';
+const nameBox=()=>`<label class="nmbox">${ic.person}<input id="nameQ" type="search" placeholder="Filtrar por nombre…" value="${esc(S.nameQ||'')}" autocomplete="off" aria-label="Filtrar por nombre"></label>`;
 const dirLabels=by=>by==='from'||by==='subject'?['A → Z','Z → A']:by==='imp'?['Importantes primero','Importantes al final']:['Más recientes arriba','Más antiguos arriba'];
 const sortLabel=()=>{const c=sortCfg(),l=dirLabels(c.by);return 'Orden: '+SORTS.find(x=>x[0]===c.by)[1]+' · '+(c.by==='date'?(c.dir==='desc'?l[0]:l[1]):c.by==='imp'?(c.dir==='desc'?l[0]:l[1]):(c.dir==='asc'?l[0]:l[1]))};
 const rowName=m=>{const p=m.sent?m.to:m.from;return String(p&&(p.name||p.email)||'').trim()};
@@ -1509,8 +1557,11 @@ function secCard(sec){
     ${count>shown.length&&sec.id!=='people'?`<button class="showall" data-section="${sec.id}">${stackAv(items.slice(shown.length,shown.length+3))}Mostrar todo (${count})</button>`:''}</section>`;
 }
 function fullList(id,label){
-  const items=sortItems(secItems(id));visible.push(...items);
+  let items=sortItems(secItems(id));
+  if(id==='all'&&namesMode()&&S.nameQ){const q=norm(S.nameQ);items=items.filter(m=>{const p=m.sent?m.to:m.from;return norm([rowName(m),p&&p.email,people(m)].join(' ')).includes(q)})}
+  visible.push(...items);
   const st=S.mode==='gmail'?G.secs[id]:null;
+  if(id==='all'&&namesMode()&&S.nameQ&&!items.length)return `<div class="empty"><b>Nadie con ese nombre</b>No hay correos cargados de «${esc(S.nameQ)}». <button class="ghost" data-namesearch>Buscar en todo el correo</button></div>`+(st&&st.token?`<button class="showall" data-loadmore="all">Cargar más</button>`:'');
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
   h+=items.length?`<section class="sec card full ${id==='search'?'results':id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
   if(st&&st.loading)h+=skeleton('Cargando correos…');
@@ -1557,11 +1608,11 @@ function renderList(){
   const srch=mailFolder&&searchActive();
   $('#listTitle').textContent=srch?'Resultados':f.label;
   const isInbox=S.folder==='smart'&&!srch;
-  $('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch||sortOn())?filterBar():'';
-  $('#filterBtn').classList.toggle('on',srch&&Object.keys(S.filters).some(k=>S.filters[k])||sortOn());$('#filterBtn').hidden=!mailFolder;
+  if(document.activeElement?.id!=='nameQ')$('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch||sortOn())?filterBar():'';
+  $('#filterBtn').classList.toggle('on',srch&&Object.keys(S.filters).some(k=>S.filters[k])||sortOn()&&!(namesMode()&&!PREF.sort));$('#filterBtn').hidden=!mailFolder;
   $('#ttl').classList.toggle('plain',!isInbox);
-  $('#ttlMain').textContent=isInbox?(isMob()?'Bandeja':'Bandeja de entrada'):(srch?'Resultados':f.label);
-  $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:isMob()?'Elementos no leídos':'Tarjetas no leídas',simple:'Lista simple'}[PREF.inboxType||'unread']):'';
+  $('#ttlMain').textContent=isInbox?(isPhone()?'Bandeja':'Bandeja de entrada'):(srch?'Resultados':f.label);
+  $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:isPhone()?'Elementos no leídos':'Tarjetas no leídas',simple:'Lista simple',names:'Por nombre'}[PREF.inboxType||'unread']):'';
   $('#ttlSub').hidden=!isInbox;
   const L=$('#list');visible=[];
   if(S.folder==='notes')return renderNotesList(L);
@@ -2281,6 +2332,8 @@ $('#q').addEventListener('input',e=>{
 });
 $('#composeBtn').onclick=()=>openCompose();$('#composeBtn2').onclick=()=>openCompose();$('#fab').onclick=()=>openCompose();
 $('#settingsBtn').onclick=openSettings;
+$('#fbar').addEventListener('input',e=>{if(e.target.id!=='nameQ')return;S.nameQ=e.target.value.trim();renderList()});
+$('#list').addEventListener('click',e=>{if(!e.target.closest('[data-namesearch]'))return;S.filters={from:S.nameQ};S.nameQ='';$('.list-head').classList.add('searching');runSearch()});
 $('#filterBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fpanel'))closePop();else openFilterPanel()};
 let _mob=isMob();window.addEventListener('resize',()=>{if(isMob()!==_mob){_mob=isMob();renderAll()}});
 $('#railMore').onclick=e=>{e.stopPropagation();$('#app').classList.toggle('drawer')};
@@ -2428,14 +2481,16 @@ function openPicker(){
   const pk=document.createElement('div');pk.className='pick';pk.id='pick';pk.setAttribute('role','dialog');pk.setAttribute('aria-label','Tipo de bandeja');
   const th1='<div class="thumb"><i class="p" style="--c:var(--bolt)"></i><i class="p" style="--c:var(--bolt)"></i><i style="--c:#7C6A6A"></i><i style="--c:#4F7F5C"></i><i style="--c:var(--faint)"></i><i style="--c:var(--faint)"></i></div>';
   const th2='<div class="thumb"><i style="--c:var(--fg)"></i><i style="--c:#F5931E"></i><hr><i style="--c:var(--fg)"></i><i style="--c:#22B35E"></i><hr><i style="--c:var(--fg)"></i><i style="--c:#E53935"></i></div>';
+  const th4='<div class="thumb az"><span>A</span><i style="--c:#A99FB0"></i><i style="--c:#A99FB0"></i><span>B</span><i style="--c:#5F8466"></i><span>C</span><i style="--c:#8D9AAA"></i></div>';
   const th3='<div class="thumb"><i style="--c:#A99FB0"></i><i style="--c:#5F8466"></i><i style="--c:#BDB49E"></i><i style="--c:#8D9AAA"></i><i style="--c:#7C6870"></i><i style="--c:#A39C8C"></i></div>';
   pk.innerHTML=`<h3>Selecciona el tipo de bandeja</h3><div class="opts">
     <button class="opt" data-type="goals" aria-pressed="${t==='goals'}">${th1}<b>Lista de objetivos</b><small>Bandeja inteligente</small></button>
     <button class="opt" data-type="unread" aria-pressed="${t==='unread'}">${th2}<b>Elementos no leídos</b><small>Bandeja inteligente</small></button>
-    <button class="opt" data-type="simple" aria-pressed="${t==='simple'}">${th3}<b>Lista simple</b><small>Bandeja clásica</small></button></div>`;
+    <button class="opt" data-type="simple" aria-pressed="${t==='simple'}">${th3}<b>Lista simple</b><small>Bandeja clásica</small></button>
+    <button class="opt" data-type="names" aria-pressed="${t==='names'}">${th4}<b>Por nombre</b><small>Todos, de la A a la Z</small></button></div>`;
   document.body.append(sc,pk);
   sc.onclick=closePicker;
-  pk.onclick=e=>{const b=e.target.closest('[data-type]');if(!b)return;PREF.inboxType=b.dataset.type;S.section=null;savePrefs();closePicker();if(S.mode==='gmail')loadSmart();else renderList()};
+  pk.onclick=e=>{const b=e.target.closest('[data-type]');if(!b)return;PREF.inboxType=b.dataset.type;S.nameQ='';if(b.dataset.type==='names')PREF.sort=null;S.section=null;savePrefs();closePicker();if(S.mode==='gmail')loadSmart();else renderList()};
   pk.querySelector('[aria-pressed="true"]').focus();
 }
 function closePicker(){document.getElementById('pick')?.remove();document.getElementById('pickScrim')?.remove()}
