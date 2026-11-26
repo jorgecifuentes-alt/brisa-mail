@@ -785,6 +785,19 @@ body{-webkit-font-smoothing:antialiased}
 .mini{width:18px;height:18px;border-radius:50%;color:#fff;font:600 10.5px var(--f-ui);display:grid;place-items:center;flex:none}
 .agmore{color:var(--faint);font-size:14px}
 @media (min-width:761px){.addrgrp{grid-template-columns:30px minmax(0,1fr);gap:12px;padding:10px 14px 12px 18px}.addrgrp .at{width:30px;height:30px;font-size:19px}.ag-h b{font-size:15px}.sdr{font-size:14.5px}}
+/* Lista de objetivos, mini avatares y nuevos remitentes */
+.dayh{padding:14px 18px 6px;color:var(--muted);font-size:14.5px;font-weight:500}
+.sec.feed{background:transparent;border:0;margin:0}
+.showall{display:flex;align-items:center;justify-content:center;gap:8px}
+.stack{display:inline-flex}
+.stack .mini{width:18px;height:18px;font-size:9.5px;box-shadow:0 0 0 1.5px var(--panel)}
+.stack .mini+.mini{margin-left:-6px}
+.gate-card{flex-wrap:wrap}
+.gate-acts{display:flex;gap:10px;width:100%;padding-left:52px}
+.gate-acts .thumb{flex:1;width:auto;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;border-radius:12px}
+.gate-acts .thumb.yes{background:#BBD8FB;color:#123B70}
+.gate-acts .thumb.no{background:var(--sunk);color:var(--fg)}
+@media (min-width:761px){.gate-card{max-width:400px}.dayh{padding:12px 20px 4px;font-size:14px}}
 </style>
 
 <div class="app" id="app">
@@ -1022,7 +1035,9 @@ const getMail=id=>S.mode==='demo'?mails.find(m=>m.id===id):G.map[id];
 const isMob=()=>window.matchMedia('(max-width:760px)').matches;
 const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:'boltL'},{id:'people',label:'Personas',mlabel:'Personal',icon:'mailI',micon:'person'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'},{id:'seen',label:'Vistos',icon:'eye'}];
 // "Vistos" junta lo ya leído de la bandeja; solo tiene sentido en "Elementos no leídos".
-const activeSecs=()=>SECS.filter(x=>x.id!=='seen'||(PREF.inboxType||'unread')==='unread');
+const activeSecs=()=>(PREF.inboxType||'unread')==='goals'?SECS.filter(x=>x.id==='prio'):SECS.filter(x=>x.id!=='seen'||(PREF.inboxType||'unread')==='unread');
+// "Lista de objetivos": Prioridad arriba y el resto de la bandeja en orden de llegada, separado por día.
+const feedOn=()=>(PREF.inboxType||'unread')==='goals';
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
 const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important&&PREF.prioImportant!==false)||(PREF.prioSenders||[]).includes(senderOf(m))));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
@@ -1034,12 +1049,13 @@ function secQuery(id){
   return {prio:useImp?'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u:(fr?'in:inbox '+fr+u:null),people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
     pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox',
-    search:buildQuery(),files:'has:attachment -in:trash newer_than:180d'}[id];
+    search:buildQuery(),files:'has:attachment -in:trash newer_than:180d',feed:'in:inbox'+notP}[id];
 }
 function secItems(id){
   if(S.mode==='demo'){
     if(id==='search')return mails.filter(m=>!m.blocked&&matchLocal(m)).sort(byTime);
     if(id==='files')return mails.filter(m=>m.attach&&!m.trash&&!m.blocked).sort(byTime);
+    if(id==='feed')return mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!isPrio(m)).sort(byTime);
     const t=PREF.inboxType||'unread';
     let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):id==='seen'?mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!m.unread&&!m.pinned&&m.id!==S.sel):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
     if(t==='unread'&&!['pinned','all','seen'].includes(id))l=l.filter(m=>m.unread||m.id===S.sel);
@@ -1186,9 +1202,9 @@ async function loadSmart(force){
   if(!caps.mcp)return;
   if(force){try{await caps.mcp.invalidate('Gmail')}catch(e){}}
   const simple=(PREF.inboxType||'unread')==='simple';
-  const ids=simple?['all']:activeSecs().map(x=>x.id);
+  const ids=simple?['all']:activeSecs().map(x=>x.id).concat(feedOn()?['feed']:[]);
   G.loading.smart=true;G.err.smart=null;renderList();
-  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:(id==='people'?25:3)),force})));
+  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id||id==='feed'?25:(id==='people'?25:(id==='prio'&&feedOn()?8:6))),force})));
   const errs=ids.map(id=>G.secs[id]&&G.secs[id].err).filter(Boolean);
   if(errs.length===ids.length)G.err.smart=errs[0];
   G.loading.smart=false;renderAll();
@@ -1334,19 +1350,33 @@ function card(id,label,items){
   visible.push(...items);
   return `<section class="sec card ${id}">${label?`<div class="sec-h"><span>${label}</span></div>`:''}${items.map(m=>rowHTML(m,id)).join('')}</section>`;
 }
+const stackAv=l=>l.length?`<span class="stack">${l.map(m=>{const p=m.sent?m.to:(m.first&&m.first.email?m.first:m.from);return `<span class="mini" style="background:${avColor(p)}">${esc(((p&&p.name||'?').trim()[0]||'?').toUpperCase())}</span>`}).join('')}</span>`:'';
+function dayLabel(t){
+  const d=new Date(t),n=new Date(),same=(a,b)=>a.toDateString()===b.toDateString();
+  if(same(d,n))return 'Hoy';const y=new Date(n);y.setDate(n.getDate()-1);if(same(d,y))return 'Ayer';
+  if((n-d)/D<7)return d.toLocaleDateString('es-CL',{weekday:'long'}).replace(/^\p{L}/u,c=>c.toUpperCase());
+  return d.toLocaleDateString('es-CL',{day:'numeric',month:'long',...(d.getFullYear()!==n.getFullYear()?{year:'numeric'}:{})});
+}
+function feedList(){
+  const items=secItems('feed'),st=S.mode==='gmail'?G.secs.feed:null;visible.push(...items);
+  let h='',last='';
+  items.forEach(m=>{const l=dayLabel(time(m));if(l!==last){h+=`<div class="dayh">${esc(l)}</div>`;last=l}h+=rowHTML(m,'feed')});
+  if(st&&st.loading)h+=skeleton('Cargando…');else if(st&&st.token)h+=`<button class="showall" data-loadmore="feed">Cargar más</button>`;
+  return h?`<section class="sec feed">${h}</section>`:'';
+}
 function secCard(sec){
   const items=secItems(sec.id),count=secCount(sec.id);
   const st=S.mode==='gmail'?G.secs[sec.id]:null;
   if(!items.length&&!(st&&st.loading&&!st.ids.length))return '';
   if(!items.length)return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span></div><div class="loading"><div class="sk"></div></div></section>`;
   let shown,body;
-  if(sec.id==='people'){shown=items;body=peopleCard(items,count)}else{shown=items.slice(0,3);body=shown.map(m=>rowHTML(m,sec.id)).join('')}
+  if(sec.id==='people'){shown=items;body=peopleCard(items,count)}else{shown=items.slice(0,sec.id==='prio'&&feedOn()?5:3);body=shown.map(m=>rowHTML(m,sec.id)).join('')}
   visible.push(...shown);
   const clear=['people','notif','news','seen'].includes(sec.id);
   const lab=isMob()&&sec.mlabel?sec.mlabel:sec.label,icn=ic[isMob()&&sec.micon?sec.micon:sec.icon];
   return `<section class="sec card ${sec.id}"><div class="sec-h">${icn}<span>${lab}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
     ${body}
-    ${count>shown.length&&sec.id!=='people'?`<button class="showall" data-section="${sec.id}">Mostrar todo (${count})</button>`:''}</section>`;
+    ${count>shown.length&&sec.id!=='people'?`<button class="showall" data-section="${sec.id}">${stackAv(items.slice(shown.length,shown.length+3))}Mostrar todo (${count})</button>`:''}</section>`;
 }
 function fullList(id,label){
   const items=secItems(id);visible.push(...items);
@@ -1431,11 +1461,11 @@ function renderList(){
   if(gate.length){
     html+=`<button class="gate-row" data-gateall>Nuevos remitentes <span class="gcount">${gate.length}</span>${ic.chevR}</button>`;
     html+=(S.gateAll?gate:gate.slice(0,1)).map(m=>`<div class="gate-card" data-id="${esc(m.id)}">${avatar(m.from)}<div class="who"><b>${esc(m.from.name)}</b><span>${esc(m.from.email)}</span><small>${ic.mailI}${esc(m.subject)}</small></div>
-      <button class="thumb yes" data-gate="ok" title="Aceptar remitente" aria-label="Aceptar a ${esc(m.from.name)}">${ic.thumbU}</button><button class="thumb no" data-gate="block" title="Bloquear remitente" aria-label="Bloquear a ${esc(m.from.name)}">${ic.thumbD}</button></div>`).join('');
+      <div class="gate-acts"><button class="thumb yes" data-gate="ok" aria-label="Aceptar a ${esc(m.from.name)}">${ic.thumbU}<span>Aceptar</span></button><button class="thumb no" data-gate="block" aria-label="Bloquear a ${esc(m.from.name)}">${ic.thumbD}<span>Bloquear</span></button></div></div>`).join('');
   }
   const due=caps.server?FOLLOW.filter(x=>x.state==='due'):[];
   if(due.length)html+=`<section class="sec card follow"><div class="sec-h">${ic.hourglass}<span>Esperando respuesta</span></div>${due.map(followRow).join('')}</section>`;
-  const cards=activeSecs().map(secCard).join('');
+  const cards=activeSecs().map(secCard).join('')+(feedOn()?feedList():'');
   html+=cards;
   if(!cards&&!gate.length&&!due.length)html+=S.mode==='gmail'&&G.loading.smart?skeleton('Cargando tu bandeja…'):`<div class="empty"><div class="zero">0</div><b>Bandeja al día</b>No queda nada pendiente. Lo pospuesto volverá cuando toque.</div>`;
   L.innerHTML=html;
