@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 // Protege toda la app (interfaz y API) con usuario y contraseña.
 // Sin APP_PASSWORD solo se puede abrir desde este mismo computador (localhost).
 export function middleware(req) {
+  // Acciones desde la notificación: protegidas por su propio token firmado (ver lib/live.js).
+  if (req.nextUrl.pathname === '/api/notify-action') return NextResponse.next();
   const pass = process.env.APP_PASSWORD;
   const user = process.env.APP_USER || 'brisa';
   const host = (req.headers.get('host') || '').replace(/:\d+$/, '');

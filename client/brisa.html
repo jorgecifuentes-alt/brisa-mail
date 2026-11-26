@@ -202,6 +202,36 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .nun{font-style:normal;flex:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent,#0B57D0);color:#fff;font:600 12px/20px var(--f-ui);text-align:center}
 .gall .ghost{font-size:13px;padding:4px 10px}
 .nbtn.on{color:#fff;background:var(--accent,#0B57D0);border-radius:10px}
+.swset{display:flex;gap:10px;flex-wrap:wrap}.swset label{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.swset select{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+.smic{border:0;background:transparent;color:var(--accent,#0B57D0);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;flex:none}
+.smic svg{width:20px;height:20px}.smic.rec{background:#D93025;color:#fff}
+#dp-search{margin:0 8px;font-size:13px;color:var(--muted)}
+.vfab{display:none}
+@media (max-width:760px) and (pointer:coarse){
+  .vfab{display:grid;place-items:center;position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:8;width:60px;height:60px;border:0;border-radius:20px;background:#D3E3FD;color:#0B57D0;box-shadow:0 2px 6px rgb(0 0 0 / .18)}
+  .vfab svg{width:27px;height:27px}
+  .app:not(.reading) .vfab{display:none}
+}
+.zen-bar{display:none}
+.app.zen .rbar,.app.zen .ask-pill,.app.zen .qrow,.app.zen #replyWrap,.app.zen .vfab,.app.zen .ai-card .src-row,.app.zen .meta-tags,.app.zen .fabs{display:none!important}
+.app.zen .zen-bar{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;position:sticky;top:0;z-index:5;background:var(--readbg,var(--bg))}
+.zen-bar .zb{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:500 14px var(--f-ui)}
+.zen-bar .zb svg{width:16px;height:16px}
+.app.zen .rbody{padding:8px 22px 80px;max-width:720px;margin:0 auto}
+.app.zen .rbody p,.app.zen .rbody .mtext{line-height:1.75}
+.app.zen .mcard{border:0;background:transparent;box-shadow:none;padding:14px 0}
+.peek-scrim{position:fixed;inset:0;z-index:60;background:rgb(0 0 0 / .35);display:flex;align-items:flex-end;justify-content:center;animation:pkf .15s ease}
+@keyframes pkf{from{opacity:0}}
+.peek{background:var(--bg);width:100%;max-width:560px;max-height:78vh;display:flex;flex-direction:column;border-radius:20px 20px 0 0;padding:18px 18px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgb(0 0 0 / .2)}
+@media (min-width:761px){.peek-scrim{align-items:center}.peek{border-radius:18px}}
+.pk-h{display:flex;align-items:center;gap:12px}.pk-h .av{width:40px;height:40px;flex:none}
+.pk-w{display:flex;flex-direction:column;min-width:0}.pk-w b{font-size:16px}.pk-w small{color:var(--muted);font-size:13px}
+.peek h3{margin:12px 0 6px;font:600 17px/1.3 var(--f-ui)}
+.pk-b{overflow:auto;flex:1;font-size:15px;line-height:1.55;color:var(--fg);zoom:var(--zoom,1)}.pk-b p{margin:0 0 10px}
+.pk-a{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--line);margin-top:8px}
+.pk-a button{flex:1;padding:11px 4px;border-radius:12px;background:var(--sunk);color:var(--fg);font:500 14px var(--f-ui)}
+.pk-a [data-pk="open"]{background:#D3E3FD;color:#0B57D0}
 .fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
 .pop.fpanel{width:300px;padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
 .fpanel .fp-h{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 4px 16px}
@@ -370,8 +400,9 @@ body{-webkit-font-smoothing:antialiased}
 .row.dragging{transition:none}
 .card{position:relative}
 .swipe-under{position:absolute;left:0;right:0;display:flex;align-items:center;padding:0 22px;color:#fff;font-weight:600;font-size:13px;gap:8px;pointer-events:none}
-.swipe-under.done{background:var(--ok);justify-content:flex-start}
-.swipe-under.snooze{background:var(--pin);justify-content:flex-end}
+.swipe-under.side-r{justify-content:flex-start}.swipe-under.side-l{justify-content:flex-end}
+.swipe-under.sw-done{background:var(--ok)}.swipe-under.sw-snooze{background:var(--pin)}.swipe-under.sw-trash{background:#D93025}.swipe-under.sw-read{background:#1A73E8}.swipe-under.sw-pin{background:#E37400}.swipe-under.sw-none{background:var(--sunk)}
+@media (pointer:coarse){#list .row{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
 .swipe-under svg{width:20px;height:20px}
 .swipe-under.armed svg{transform:scale(1.25)}
 .tabbar{display:none}
@@ -941,7 +972,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn" id="settingsBtn" aria-label="Ajustes" title="Firma y plantillas"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
         <button class="icon-btn" id="composeBtn2" aria-label="Redactar"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
       </div>
-      <label class="search" id="searchBox"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar personas, asuntos, texto…" autocomplete="off"></label>
+      <label class="search" id="searchBox"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar personas, asuntos, texto…" autocomplete="off"><button type="button" class="mic smic" data-mic="search" id="smic" hidden aria-label="Buscar con la voz" title="Buscar con la voz"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></button></label><div class="dict-partial" id="dp-search" hidden></div>
       <div class="fbar" id="fbar"></div>
     </div>
     <div class="ptr" id="ptr" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></div>
@@ -1220,7 +1251,7 @@ function dateRange(f){ // [desde, hasta) en ms, o null
   if(f.date==='custom'){const a=f.after?new Date(f.after+'T00:00:00').getTime():0,b=f.before?new Date(f.before+'T00:00:00').getTime()+D:Infinity;return [a||0,b||Infinity]}
   return null;
 }
-const dateLabel=f=>f.date==='custom'?[f.after&&'desde '+new Date(f.after+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}),f.before&&'hasta '+new Date(f.before+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})].filter(Boolean).join(' ')||'Fecha':(DATES.find(x=>x[0]===f.date)||['',''])[1];
+const dateLabel=f=>f.date==='custom'&&f.after&&f.after===f.before?new Date(f.after+'T12:00').toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}):f.date==='custom'?[f.after&&'desde '+new Date(f.after+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}),f.before&&'hasta '+new Date(f.before+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})].filter(Boolean).join(' ')||'Fecha':(DATES.find(x=>x[0]===f.date)||['',''])[1];
 const searchActive=()=>!!(S.q||Object.keys(S.filters).some(k=>S.filters[k]));
 const qv=v=>/\s/.test(v)?'"'+String(v).replace(/"/g,'')+'"':v;
 function buildQuery(){const f=S.filters,q=[S.q];FILTERS.forEach(([k,,g])=>{if(f[k])q.push(g)});if(f.from)q.push('from:'+qv(f.from));
@@ -1768,6 +1799,7 @@ function fileTile(a){
 const QCHIPS=[['Interesado','Responde que estoy interesado y propón el siguiente paso.','¡Me interesa! Conversemos los detalles.'],['No interesado','Responde amablemente que por ahora no estoy interesado.','Muchas gracias por escribir; por ahora no me interesa.'],['Gracias','Agradece el correo de forma breve.','¡Muchas gracias!']];
 function renderReader(){
   const R=$('#reader');
+  if(!S.sel||!$('#app').classList.contains('reading'))$('#app').classList.remove('zen');
   if(S.folder==='notes'&&S.sel&&String(S.sel).startsWith('note:'))return renderNoteReader(R);
   if(S.folder==='team'&&S.sel)return renderSharedReader(R);
   const m=S.sel&&getMail(S.sel);
@@ -1803,6 +1835,8 @@ function renderReader(){
       <span class="sp"></span>
       ${caps.db&&uid?`<button class="pillbtn" data-act="share" title="Compartir con el equipo">${ic.share}<span>Compartir</span></button>`:''}
     </div>
+    <div class="zen-bar"><button class="zb" data-zenaa aria-label="Tamaño de letra">Aa</button><button class="zb" data-zenx>${ic.x}<span>Salir de lectura</span></button></div>
+    ${caps.dict&&!dictOff&&!m.sent?`<button class="vfab" data-voicereply aria-label="Responder con la voz" title="Responder con la voz">${ic.mic}</button>`:''}
     <div class="reader-body rbody">
       <h2 class="subj">${esc(m.subject)}</h2>
       ${((su&&su>Date.now())||m.trash)?`<div class="meta-tags">${su&&su>Date.now()?`<span class="tag snz">Vuelve ${esc(longDate(su))}</span>`:''}${m.trash?'<span class="tag">En papelera</span>':''}</div>`:''}
@@ -1911,6 +1945,7 @@ async function aiDraft(m){
 function wireDictation(d){
   d.onPartial(({text})=>{const el=document.getElementById('dp-'+dictTarget);if(el){el.hidden=!text;el.textContent=text}});
   d.onFinal(({text})=>{
+    if(dictTarget==='search'&&text){const p=document.getElementById('dp-search');if(p)p.hidden=true;try{caps.dict.stop()}catch(err){}voiceSearch(text);return}
     const el=dictEl();if(!el||!text)return;
     const v=el.value;el.value=v+(v&&!/\s$/.test(v)?' ':'')+(v?text.replace(/^\s+/,''):text.replace(/^\s+/,''));
     el.dispatchEvent(new Event('input',{bubbles:true}));
@@ -1926,7 +1961,7 @@ function wireDictation(d){
     }
   });
 }
-function dictEl(){return document.getElementById({reply:'replyBox',compose:'cBody',note:'noteText',ai:'aiInput'}[dictTarget])}
+function dictEl(){return document.getElementById({reply:'replyBox',compose:'cBody',note:'noteText',ai:'aiInput',search:'q'}[dictTarget])}
 function toggleMic(target){
   const d=caps.dict;if(!d)return;
   if(d.active()){const same=dictTarget===target;d.stop().catch(()=>{});if(same)return}
@@ -2254,6 +2289,10 @@ function openSettings(){
       ${S.mode==='gmail'?`<label class="lbl">Prioridad</label>
       <label class="sig" style="font-size:14px;color:var(--fg)"><input type="checkbox" id="prioImp" ${PREF.prioImportant!==false?'checked':''}> Incluir los correos que Gmail marca como importantes</label>
       <p class="hint">Desmárcalo para que Prioridad tenga solo a las personas que marcas con ⚡, como en Spark. El resto de los correos de personas va a Personas.</p>`:''}
+      <label class="lbl">Deslizar un correo (celular)</label>
+      <div class="swset"><label>Hacia la derecha →<select id="swR">${Object.keys(SWA).map(k=>`<option value="${k}" ${(PREF.swipeR||'done')===k?'selected':''}>${SWA[k].l}</option>`).join('')}</select></label>
+      <label>← Hacia la izquierda<select id="swL">${Object.keys(SWA).map(k=>`<option value="${k}" ${(PREF.swipeL||'snooze')===k?'selected':''}>${SWA[k].l}</option>`).join('')}</select></label></div>
+      <p class="hint">Mantén presionado un correo para verlo rápido sin abrirlo.</p>
       <label class="lbl">Proyectos</label>
       <p class="hint">Los correos que mencionan un proyecto en el asunto o el texto llevan su etiqueta de color, y puedes filtrar por proyecto.</p>
       <div id="projList" class="projlist"></div>
@@ -2288,6 +2327,7 @@ function openSettings(){
       const pi=sc.querySelector('#prioImp');const prioChanged=pi&&(PREF.prioImportant!==false)!==pi.checked;if(pi)PREF.prioImportant=pi.checked;
       const dg=sc.querySelector('#dgOn');if(dg){PREF.digest={on:dg.checked,time:sc.querySelector('#dgTime').value||'08:00'};try{PREF.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}}
       PREF.signature=sc.querySelector('#sigTxt').value.trim().slice(0,1000);
+      PREF.swipeR=sc.querySelector('#swR').value;PREF.swipeL=sc.querySelector('#swL').value;
       {const r=sc.querySelector('#roleTxt').value.trim().slice(0,3000);PREF.aiRole=(!r||r===AI_ROLE_DEFAULT)?'':r}
       PREF.templates=tpls.filter(t=>t.name.trim()||t.body.trim()).map(t=>({name:t.name.trim().slice(0,60)||'Sin nombre',body:t.body.slice(0,4000)}));
       savePrefs();sc.remove();toast('Ajustes guardados');renderReader();if(prioChanged&&S.mode==='gmail')loadSmart(true);else renderList();
@@ -2380,6 +2420,7 @@ $('#reader').addEventListener('click',e=>{
     menuAt(am,[['Resumir el hilo',ic.spark,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiSummary(m.id,threadText(m),'este hilo de correo')}],['Mapa mental',ic.tree,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiMap(m.id,threadText(m),'este hilo de correo')}],['Redactar respuesta',ic.reply,()=>{openReply(false);aiDraft(m)}],['Preguntarle al asistente',ic.spark,()=>openAI()]]);return}
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
     const it=[['Responder',ic.reply,()=>openReply()],['Reenviar',ic.fwd,()=>openCompose({subject:'Fwd: '+m.subject,body:'\n\n---------- Mensaje reenviado ----------\nDe: '+m.from.name+' <'+m.from.email+'>\nAsunto: '+m.subject+'\n\n'+(m.msgs?plain(lastOf(m).text.join('\n\n')):m.snippet||'')})]];
+    it.push(['Modo lectura',ic.doc,()=>setZen(true)]);
     if(isPhone())it.push(['Tamaño de letra',ic.doc,()=>openFontPanel(mm)]);
     it.push(['Ver correos de esta persona',ic.person,()=>{S.filters={from:senderOf(m)};S.q='';$('#q').value='';S.folder='smart';S.section=null;$('.list-head').classList.add('searching');$('#app').classList.remove('reading');runSearch();renderNav()}]);
     if(caps.db&&uid)it.push(['Compartir con el equipo',ic.share,()=>act('share',m.id)]);
@@ -2444,6 +2485,61 @@ function openFontPanel(anchor){
   p.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-fs]');if(!b)return;const d=+b.dataset.fs;fsIdx=d===0?2:Math.max(0,Math.min(FS.length-1,fsIdx+d));applyFS();draw()});
 }
 $('#fontBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fsp'))closePop();else openFontPanel($('#fontBtn'))};
+/* ---------- Modo lectura: solo el texto, sin botones ---------- */
+function setZen(on){$('#app').classList.toggle('zen',!!on);if(on)toast('Modo lectura · toca "Salir de lectura" para volver',null,2500)}
+/* ---------- Responder con la voz ---------- */
+function voiceReply(){
+  const m=getMail(S.sel);if(!m)return;
+  if(!$('#replyBox')){toast('Este correo no se puede responder.');return}
+  openReply(false);
+  if(!(caps.dict&&caps.dict.active()&&dictTarget==='reply'))toggleMic('reply');
+  const w=$('#replyWrap');w&&w.scrollIntoView({block:'center',behavior:'smooth'});
+  toast('Habla: tu respuesta se escribe sola. Revísala y toca Enviar.',null,3500);
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-voicereply]')){voiceReply();return}
+  if(e.target.closest('[data-zenx]')){setZen(false);return}
+  const za=e.target.closest('[data-zenaa]');if(za){e.stopPropagation();openFontPanel(za)}
+});
+/* ---------- Vista rápida (mantener presionado) ---------- */
+async function openPeek(id){
+  const m=getMail(id);if(!m)return;
+  document.getElementById('peek')?.remove();
+  const sc=document.createElement('div');sc.id='peek';sc.className='peek-scrim';
+  const body=()=>m.msgs&&m.msgs.length?m.msgs.slice(-1)[0].text.map(t=>`<p>${esc(t)}</p>`).join(''):m.bodyErr?'<p class="hint">No se pudo cargar el texto.</p>':`<p>${esc(preview(m))}</p><p class="hint">Cargando el texto completo…</p>`;
+  const draw=()=>{sc.innerHTML=`<div class="peek" role="dialog" aria-label="Vista rápida"><div class="pk-h">${avatar(m.from)}<div class="pk-w"><b>${esc(m.from&&m.from.name||'')}</b><small>${esc(fmt(time(m)))}${m.msgs&&m.msgs.length>1?' · '+m.msgs.length+' mensajes':''}</small></div></div>
+    <h3>${esc(m.subject||'(sin asunto)')}</h3><div class="pk-b">${body()}</div>
+    <div class="pk-a"><button data-pk="open">Abrir</button><button data-pk="done">Hecho</button><button data-pk="snooze">Posponer</button><button data-pk="close">Cerrar</button></div></div>`};
+  draw();document.body.appendChild(sc);
+  const t0=Date.now();
+  sc.addEventListener('click',e=>{if(Date.now()-t0<700)return;const b=e.target.closest('[data-pk]');if(e.target===sc||b&&b.dataset.pk==='close'){sc.remove();return}if(!b)return;
+    sc.remove();const k=b.dataset.pk;if(k==='open')openSel(id);else if(k==='done')act('done',id);else if(k==='snooze'){const r=document.querySelector(`.row[data-id="${CSS.escape(id)}"]`);act('snooze',id,r)}});
+  if(m.gm&&!m.msgs){await loadBody(m);if(document.getElementById('peek')===sc)draw()}
+}
+/* ---------- Buscar por voz: "correos de Miguel de esta semana" ---------- */
+function voiceSearch(text){
+  let t=' '+String(text||'').toLowerCase().replace(/[.,;:¿?¡!]/g,' ')+' ';const f={};
+  const take=(re,fn)=>{const m=re.exec(t);if(m){fn(m);t=t.replace(m[0],' ')}};
+  take(/\b(sin leer|no le[ií]dos?)\b/,()=>f.unread=true);
+  take(/\bcon (adjuntos?|archivos?)\b/,()=>f.att=true);
+  take(/\b(importantes?)\b/,()=>f.imp=true);
+  take(/\b(destacados?|marcados?)\b/,()=>f.flag=true);
+  take(/\b(para m[ií])\b/,()=>f.tome=true);
+  take(/\b(de |del )?(esta semana)\b/,()=>f.date='week');
+  take(/\b(de |del )?(este mes)\b/,()=>f.date='month');
+  take(/\b(de )?hoy\b/,()=>f.date='today');
+  take(/\b(de )?ayer\b/,()=>{const y=new Date(Date.now()-D),v=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');f.date='custom';f.after=v;f.before=v});
+  const STOP='de|del|desde|esta|este|hoy|ayer|sin|con|que|y|sobre|en|la|el|los|las';
+  take(new RegExp('\\b(?:de|del|desde)\\s+((?:(?!(?:'+STOP+')\\b)[a-záéíóúüñ]+\\s*){1,3})'),m=>f.from=m[1].trim().replace(/(^|\s)\p{L}/gu,c=>c.toUpperCase()));
+  const rest=t.replace(/\b(busca(r)?|buscar|mu[eé]strame|mostrar|ver|correos?|mails?|mensajes?|los|las|el|la|todos?)\b/g,' ').replace(/\s+/g,' ').trim();
+  S.filters=f;S.q=rest;$('#q').value=rest;S.section=null;
+  if(!['smart','sent','trash'].includes(S.folder)){S.folder='smart';renderNav()}
+  $('.list-head').classList.add('searching');runSearch();
+  const parts=[f.from&&'De: '+f.from,f.date&&dateLabel(f),...FILTERS.filter(([k])=>f[k]).map(x=>x[1]),rest&&'«'+rest+'»'].filter(Boolean);
+  toast('Buscando: '+(parts.join(' · ')||text),null,3500);
+}
+window.brisaVoiceSearch=voiceSearch;
+window.addEventListener('brisa-refresh',()=>{if(S.mode==='gmail')loadSmart(true)});
 $('#namesBtn').onclick=()=>{
   const on=namesMode()&&PREF.namesCollapsed;
   if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
@@ -2460,37 +2556,54 @@ $('#tabbar').addEventListener('click',e=>{const b=e.target.closest('[data-tab]')
 $('#installBtn').onclick=()=>{const d=caps.desktop;if(!d||!d.install)return;
   d.install.request().then(r=>{if(r==='installed'){installState='installed';renderNav()}else if(r==='failed')toast('No se pudo instalar la app. Intenta desde el menú del artefacto.')}).catch(()=>toast('Abre esta página en la app de escritorio de Claude para instalarla.'))};
 
-/* Deslizar en pantallas táctiles: → hecho, ← posponer */
+/* Deslizar en pantallas táctiles: cada lado hace lo que elijas en Ajustes (por defecto → hecho, ← posponer) */
+const SWA={done:{l:'Hecho',i:ic.check},snooze:{l:'Posponer',i:ic.clock},trash:{l:'Eliminar',i:ic.trash},read:{l:'Leído / no leído',i:ic.circle},pin:{l:'Anclar',i:ic.pin},none:{l:'Nada',i:''}};
+const swipeAct=right=>{const v=right?(PREF.swipeR||'done'):(PREF.swipeL||'snooze');return SWA[v]?v:'none'};
+const swipeLabel=(a,m)=>a==='read'?(m&&m.unread?'Leído':'No leído'):a==='pin'?(m&&m.pinned?'Desanclar':'Anclar'):SWA[a].l;
+function runSwipe(a,id,row){
+  const m=getMail(id);if(!m)return;
+  if(a==='snooze')return act('snooze',id,row);
+  if(a==='pin')return act('pin',id);
+  if(a==='read'){if(m.unread){markRead(m);renderAll();toast('Marcado como leído',()=>{m.unread=true;if(m.gm)gRun(()=>gcall('label_thread',{threadId:m.id,labelIds:['UNREAD']}));renderAll()})}else{const sel=S.sel;act('unread',id);if(sel&&sel!==id){S.sel=sel;$('#app').classList.add('reading');renderAll()}}}
+}
 (function(){
   let st=null,suppress=false;const TH=88;
   const list=$('#list');
   list.addEventListener('pointerdown',e=>{
     if(e.pointerType==='mouse')return;
-    const row=e.target.closest('.row[data-id]');if(!row||!row.closest('.card')||row.querySelector('.hover-acts')===null)return;
+    const row=e.target.closest('.row[data-id]');if(!row||!row.closest('.sec')||!getMail(row.dataset.id))return;
     st={row,id:row.dataset.id,x:e.clientX,y:e.clientY,dx:0,on:false,pid:e.pointerId,under:null};
+    // Mantener presionado: vista rápida del correo.
+    const s0=st;st.lp=setTimeout(()=>{if(st===s0&&!s0.on){s0.peek=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(err){}openPeek(s0.id)}},460);
   });
   list.addEventListener('pointermove',e=>{
     if(!st||e.pointerId!==st.pid)return;
     const dx=e.clientX-st.x,dy=e.clientY-st.y;
+    if(Math.abs(dx)>8||Math.abs(dy)>8)clearTimeout(st.lp);
+    if(st.peek)return;
     if(!st.on){if(Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)){st=null;return}if(Math.abs(dx)<12)return;
       st.on=true;st.row.classList.add('dragging');try{st.row.setPointerCapture(st.pid)}catch(err){}
       const u=document.createElement('div');u.className='swipe-under';u.style.top=st.row.offsetTop+'px';u.style.height=st.row.offsetHeight+'px';st.row.parentNode.insertBefore(u,st.row);st.under=u}
     st.dx=dx;st.row.style.transform=`translateX(${dx}px)`;
-    const right=dx>0;st.under.className='swipe-under '+(right?'done':'snooze')+(Math.abs(dx)>TH?' armed':'');
-    st.under.innerHTML=right?ic.check+'<span>Hecho</span>':'<span>Posponer</span>'+ic.clock;
+    const right=dx>0,a=swipeAct(right);st.under.className='swipe-under '+(right?'side-r':'side-l')+' sw-'+a+(Math.abs(dx)>TH?' armed':'');
+    const lab=swipeLabel(a,getMail(st.id));st.under.innerHTML=a==='none'?'':right?SWA[a].i+'<span>'+lab+'</span>':'<span>'+lab+'</span>'+SWA[a].i;
   });
   const end=(e,cancel)=>{
     if(!st||e.pointerId!==st.pid)return;
-    const s=st;st=null;if(!s.on)return;
+    const s=st;st=null;clearTimeout(s.lp);
+    if(s.peek){suppress=true;setTimeout(()=>suppress=false,500);return}
+    if(!s.on)return;
     if(cancel)s.dx=0;
     suppress=true;setTimeout(()=>suppress=false,350);
     s.row.classList.remove('dragging');
-    if(s.dx>TH){s.row.style.transform='translateX(110%)';setTimeout(()=>{s.under&&s.under.remove();act('done',s.id)},170)}
-    else if(s.dx<-TH){s.row.style.transform='';setTimeout(()=>{s.under&&s.under.remove();act('snooze',s.id,s.row)},170)}
-    else{s.row.style.transform='';setTimeout(()=>s.under&&s.under.remove(),200)}
+    const a=Math.abs(s.dx)>TH?swipeAct(s.dx>0):'none';
+    if(a==='none'){s.row.style.transform='';setTimeout(()=>s.under&&s.under.remove(),200)}
+    else if(a==='done'||a==='trash'){s.row.style.transform=`translateX(${s.dx>0?110:-110}%)`;setTimeout(()=>{s.under&&s.under.remove();act(a,s.id)},170)}
+    else{s.row.style.transform='';setTimeout(()=>{s.under&&s.under.remove();runSwipe(a,s.id,s.row)},170)}
   };
   list.addEventListener('pointerup',e=>end(e,false));list.addEventListener('pointercancel',e=>end(e,true));
   list.addEventListener('click',e=>{if(suppress){e.stopPropagation();e.preventDefault()}},true);
+  list.addEventListener('contextmenu',e=>{if(e.target.closest('.row[data-id]')&&matchMedia('(pointer:coarse)').matches)e.preventDefault()});
 })();
 $('#refreshBtn').onclick=()=>loadFolder(GQ[S.folder]?S.folder:'smart',true);
 $('#menuBtn').onclick=()=>$('#app').classList.toggle('drawer');
@@ -2909,7 +3022,7 @@ if(window.claude&&typeof window.claude.use==='function'){
       d.app.dock.setIcon(c.toDataURL('image/png')).catch(()=>{})}catch(e){}}
     lastBadge=null;renderNav();
   });
-  claude.use('dictation').then(d=>{caps.dict=d;if(d)wireDictation(d);renderReader()});
+  claude.use('dictation').then(d=>{caps.dict=d;if(d)wireDictation(d);const sm=$('#smic');if(sm)sm.hidden=!d;renderReader()});
   initDb();
 }
 })();

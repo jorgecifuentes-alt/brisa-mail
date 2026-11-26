@@ -311,6 +311,18 @@
     } catch { return false; }
   }
   window.brisaCheckUpdate = checkUpdate;
+  // Al abrir la app se limpian los avisos de correo nuevo (y con ellos el número del ícono).
+  async function clearMailNotes() {
+    try {
+      const r = await navigator.serviceWorker?.getRegistration();
+      const ns = r ? await r.getNotifications() : [];
+      ns.filter((n) => String(n.tag).startsWith('mail-')).forEach((n) => n.close());
+    } catch { /* sin notificaciones */ }
+  }
+  window.addEventListener('load', clearMailNotes);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clearMailNotes(); });
+  // El service worker avisa cuando se actuó desde una notificación: recargar la bandeja.
+  navigator.serviceWorker?.addEventListener('message', (e) => { if (e.data && e.data.type === 'brisa-refresh') window.dispatchEvent(new Event('brisa-refresh')); });
   window.addEventListener('load', () => setTimeout(() => checkUpdate(false), 4000));
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(false); });
   setInterval(() => { if (document.visibilityState === 'visible') checkUpdate(false); }, 5 * 60 * 1000);
