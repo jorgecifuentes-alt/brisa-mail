@@ -623,7 +623,7 @@ body{-webkit-font-smoothing:antialiased}
   .row.unread .r-subj{font-weight:600}
   .r-bot .r-prev{font-size:14px}
   .cnt{height:18px;min-width:20px;font-size:11.5px}
-  .chips{display:none}
+  .chips{margin-top:3px}
   .ibar{height:13px}
   .showall{font-size:14px;padding:8px 0 12px}
   .sec.prio .showall{color:var(--bolt)}
@@ -731,6 +731,46 @@ body{-webkit-font-smoothing:antialiased}
 .mv-stage.drag{cursor:grabbing}
 .mv-stage svg{display:block;max-width:none;flex:none}
 .mv-hint{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);font-size:13px;padding:7px 14px;border-radius:999px;opacity:.85;pointer-events:none;white-space:nowrap}
+/* Proyectos, filtros, grupos, adjuntos y seguimiento */
+.pchip{font-size:12px;font-weight:600;color:var(--pc);background:color-mix(in srgb,var(--pc) 13%,transparent);border:1px solid color-mix(in srgb,var(--pc) 35%,transparent);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.fbar{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 2px;scrollbar-width:none}
+.fbar:empty{display:none}
+.fbar::-webkit-scrollbar{display:none}
+.fbar.inlist{padding:8px 14px 10px}
+.fchip{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted)}
+.fchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.fchip.proj{border-color:color-mix(in srgb,var(--pc) 40%,var(--line));color:var(--pc)}
+.fchip.proj.on{background:color-mix(in srgb,var(--pc) 14%,var(--panel));border-color:var(--pc)}
+.grpr{cursor:pointer}
+.gn{display:inline-block;background:var(--sunk);color:var(--muted);border-radius:6px;font-size:12px;font-weight:600;padding:0 6px;margin-left:4px;vertical-align:1px}
+.gline{display:block;width:100%;text-align:left;padding:2px 0;color:var(--muted);font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gline::before{content:"• ";color:var(--faint)}
+.gline.u{color:var(--fg);font-weight:600}
+.gline:hover span{text-decoration:underline}
+.gmore{font-size:12.5px;color:var(--faint)}
+.grp-h{display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;color:var(--muted);font-size:14px;font-weight:600}
+.grp-h svg{width:16px;height:16px;transform:rotate(90deg)}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;padding:4px 14px 20px}
+.libitem{display:flex;flex-direction:column;gap:6px;min-width:0}
+.libfile{display:block;color:inherit;text-decoration:none}
+.libfile .ftile,.libfile .fic{width:100%}
+.libitem .ftile{width:100%}.libitem .fic{width:100%;height:auto;aspect-ratio:1}
+.libmeta{text-align:left;display:flex;flex-direction:column;gap:1px;min-width:0}
+.libmeta b,.libmeta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.libmeta span{color:var(--muted)}.libmeta small{color:var(--faint);font-size:12px}
+.frow{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:10px 16px}
+.frow .av{width:34px;height:34px;font-size:12px}
+.fact{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fact .qchip{font-size:13px;padding:6px 12px}
+.sec.follow{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.sec.follow .sec-h svg,.sec.follow .sec-h span{color:var(--accent)}
+.rfollow{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit;font-size:12.5px;max-width:190px}
+.projlist{display:flex;flex-direction:column;gap:8px}
+.proj{display:grid;grid-template-columns:28px 1fr 1.4fr 36px;gap:6px;align-items:center}
+.pdot{width:24px;height:24px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
+@media (max-width:600px){.proj{grid-template-columns:28px 1fr 36px}.proj input[data-pk]{grid-column:2/4}}
+#cAt{background:var(--sunk);color:var(--fg);border:0;border-radius:9px;padding:7px;font:inherit}
+@media (min-width:761px){.chips .chip{display:none}}
 </style>
 
 <div class="app" id="app">
@@ -739,7 +779,7 @@ body{-webkit-font-smoothing:antialiased}
     <button class="compose-btn" id="composeBtn" title="Redactar (C)"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg><span>Redactar</span></button>
     <nav class="nav" id="nav" aria-label="Carpetas"></nav>
     <button class="rail-more" id="railMore" aria-label="Menú y ajustes" title="Menú y ajustes"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <button class="side-set" id="sideSettings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Firma, plantillas y avisos</button>
+    <button class="side-set" id="sideSettings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Ajustes</button>
     <div class="src" id="src"></div>
     <button class="install-btn" id="installBtn" hidden></button>
     <div class="theme-row" role="group" aria-label="Tema">
@@ -763,6 +803,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn" id="composeBtn2" aria-label="Redactar"><svg class="i" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
       </div>
       <label class="search" id="searchBox"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar personas, asuntos, texto…" autocomplete="off"></label>
+      <div class="fbar" id="fbar"></div>
     </div>
     <div class="ptr" id="ptr" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></div>
     <div class="list" id="list" role="listbox" aria-label="Correos"></div>
@@ -821,6 +862,9 @@ const ic={
   thumbD:'<svg class="i" viewBox="0 0 24 24"><path d="M17 13V4h3v9zM17 13l-4 8a2 2 0 01-2-2v-4H6a2 2 0 01-2-2.3l1.2-7A2 2 0 017.2 4H17"/></svg>',
   menu:'<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
   eye:'<svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  hourglass:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9s10 4 10 9"/></svg>',
+  schedule:'<svg class="i" viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/><circle cx="18" cy="18" r="4" style="fill:var(--panel)"/><path d="M18 16.5V18l1 1"/></svg>',
+  filter:'<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v6l-4-2v-4z"/></svg>',
   more:'<svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
   monitor:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
   ext:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg>',
@@ -913,7 +957,7 @@ function parseAddr(s,dn){
 }
 
 /* ---------- Estado ---------- */
-const S={mode:'demo',folder:'smart',sel:null,q:'',expanded:{},section:null,replyOpen:null,gateAll:false};
+const S={mode:'demo',folder:'smart',sel:null,q:'',expanded:{},section:null,replyOpen:null,gateAll:false,filters:{},openGrp:{},fileType:'all'};
 const G={map:{},lists:{},loading:{},err:{},search:null,searchLoading:false,searchErr:null,secs:{}};
 const PREF={signature:'',templates:[
   {name:'Recibido',body:'Recibido, gracias. Te confirmo en cuanto lo tenga listo.'},
@@ -923,7 +967,7 @@ const AI={sum:{},map:{}};
 const caps={mcp:null,db:null,user:null,sample:null,dict:null,desktop:null};
 let installState='unavailable';
 let uid=null,canEditPage=false,aiOff=false,dictOff=false;
-let prefRef=null,noteCol=null,sharedCol=null;
+let prefRef=null,noteCol=null,sharedCol=null,followCol=null,schedCol=null,snzCol=null,FOLLOW=[],SCHED=[];
 let shared=[],sharedState='off',names={},comments=[],cmtUnsub=null,cmtFor=null;
 let notes=[],noteDraft=null;
 let dictTarget=null,dictState='idle';
@@ -932,10 +976,12 @@ const folders=()=>[
  {id:'smart',label:'Bandeja inteligente',icon:ic.inbox},
  {id:'pinned',label:'Anclados',icon:ic.pin},
  {id:'snoozed',label:'Pospuestos',icon:ic.clock},
+ ...(caps.server?[{id:'follow',label:'Seguimiento',icon:ic.hourglass},{id:'sched',label:'Programados',icon:ic.schedule}]:[]),
  {id:'sent',label:'Enviados',icon:ic.send},
  {id:'done',label:'Hechos',icon:ic.check},
  {id:'trash',label:'Papelera',icon:ic.trash},
  {sep:'Herramientas'},
+ {id:'files',label:'Adjuntos',icon:ic.clip},
  {id:'notes',label:'Notas de voz',icon:ic.mic},
  ...(caps.db?[{id:'team',label:'Equipo',icon:ic.team}]:[]),
 ];
@@ -972,18 +1018,66 @@ function secQuery(id){
   const notP=' -is:important'+(fr?' -'+fr:'');
   return {prio:'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u,people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
-    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox'}[id];
+    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox',
+    search:buildQuery(),files:'has:attachment -in:trash newer_than:180d'}[id];
 }
 function secItems(id){
   if(S.mode==='demo'){
+    if(id==='search')return mails.filter(m=>!m.blocked&&matchLocal(m)).sort(byTime);
+    if(id==='files')return mails.filter(m=>m.attach&&!m.trash&&!m.blocked).sort(byTime);
     const t=PREF.inboxType||'unread';
     let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):id==='seen'?mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!m.unread&&!m.pinned&&m.id!==S.sel):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
     if(t==='unread'&&!['pinned','all','seen'].includes(id))l=l.filter(m=>m.unread||m.id===S.sel);
     return l.sort(byTime);
   }
   const st=G.secs[id];if(!st)return [];
-  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:m.inInbox!==false)&&(id==='prio'||id==='all'||id==='seen'||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
+  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','seen','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
 }
+/* ---------- Proyectos con color ---------- */
+const PCOL=['#2F6FE4','#E5484D','#2B9348','#9C36B5','#E8742C','#0B8DA3','#C2185B','#6D4C41'];
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const projKeys=p=>(p.keys&&p.keys.length?p.keys:[p.name]).filter(Boolean);
+function projOf(m){if(!m)return null;const hay=norm((m.subject||'')+' '+(m.snippet||''));return (PREF.projects||[]).find(p=>projKeys(p).some(k=>hay.includes(norm(k))))||null}
+function projQuery(p){return '('+projKeys(p).map(k=>'"'+String(k).replace(/"/g,'')+'"').join(' OR ')+')'}
+function suggestProjects(){
+  const STOP=new Set('de la el los las y en del para por con re rv fw fwd al un una su sus se que es mi tu nov dic ene feb mar abr may jun jul ago sep oct'.split(' '));
+  const pool=S.mode==='demo'?mails:Object.values(G.map).filter(m=>m&&m.subject!==undefined);
+  const cnt=new Map();
+  pool.forEach(m=>{const w=norm(m.subject).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(x=>x.length>2&&!STOP.has(x)&&!/^\d+$/.test(x));const seen=new Set();
+    for(let i=0;i<w.length-1;i++){const g=w[i]+' '+w[i+1];if(!seen.has(g)){seen.add(g);cnt.set(g,(cnt.get(g)||0)+1)}}});
+  const have=new Set((PREF.projects||[]).flatMap(p=>projKeys(p).map(norm)));
+  return [...cnt].filter(([g,c])=>c>=3&&!have.has(g)).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([g])=>g.replace(/\b[a-z]/g,c=>c.toUpperCase()));
+}
+function chipsHTML(m){const p=projOf(m),c=[];if(m.important&&m.cat==='people')c.push('<span class="chip">Importantes</span>');if(p)c.push(`<span class="pchip" style="--pc:${p.color}">${esc(p.name)}</span>`);return c.length?`<div class="chips">${c.join('')}</div>`:''}
+
+/* ---------- Búsqueda con filtros ---------- */
+const FILTERS=[['unread','Sin leer','is:unread'],['att','Con adjuntos','has:attachment'],['week','Esta semana','newer_than:7d'],['imp','Importantes','is:important']];
+const searchActive=()=>!!(S.q||Object.keys(S.filters).some(k=>S.filters[k]));
+function buildQuery(){const f=S.filters,q=[S.q];FILTERS.forEach(([k,,g])=>{if(f[k])q.push(g)});if(f.from)q.push('from:'+f.from);
+  if(f.proj){const p=(PREF.projects||[]).find(x=>x.name===f.proj);if(p)q.push(projQuery(p))}return q.filter(Boolean).join(' ')||'in:inbox'}
+function matchLocal(m){const f=S.filters;
+  if(S.q){const q=norm(S.q);if(!norm([m.from.name,m.from.email,m.subject,preview(m),m.to?m.to.name:''].join(' ')).includes(q))return false}
+  if(f.unread&&!m.unread)return false;if(f.att&&!(m.attach||m.hasAtt))return false;if(f.week&&time(m)<Date.now()-7*D)return false;
+  if(f.imp&&!m.important)return false;if(f.from&&senderOf(m)!==f.from)return false;if(f.proj&&(projOf(m)||{}).name!==f.proj)return false;return true}
+function filterBar(){const f=S.filters,ch=(k,l,on)=>`<button class="fchip ${on?'on':''}" data-filter="${esc(k)}" aria-pressed="${!!on}">${l}</button>`;
+  return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')}
+
+/* ---------- Agrupar por persona (Personal) ---------- */
+function groupRows(items,sec,limit){
+  const groups=[],by=new Map();
+  items.forEach(m=>{const k=senderOf(m)||m.id;let g=by.get(k);if(!g){g={k,list:[]};by.set(k,g);groups.push(g)}g.list.push(m)});
+  const use=limit?groups.slice(0,limit):groups,shown=[];
+  const html=use.map(g=>{
+    if(g.list.length===1){shown.push(g.list[0]);return rowHTML(g.list[0],sec)}
+    shown.push(...g.list);const f=g.list[0],unread=g.list.some(m=>m.unread);
+    if(S.openGrp[g.k])return `<div class="grp open"><button class="grp-h" data-grp="${esc(g.k)}" aria-expanded="true">${ic.chevR}<span>${esc(f.from.name)}</span><span class="gn">${g.list.length}</span></button>${g.list.map(m=>rowHTML(m,sec)).join('')}</div>`;
+    return `<div class="row grpr ${unread?'unread':''}" data-grp="${esc(g.k)}" role="option" tabindex="-1" aria-expanded="false">${unread?'<span class="udot"></span>':''}${avatar(f.from)}<div class="rb">
+      <div class="r-top"><span class="r-from">${esc(f.from.name)} <span class="gn">${g.list.length}</span></span><span class="r-time">${esc(fmt(time(f)))}</span></div>
+      ${g.list.slice(0,3).map(m=>`<button class="gline ${m.unread?'u':''}" data-open="${esc(m.id)}"><span>${esc(m.subject)}</span></button>`).join('')}${g.list.length>3?`<span class="gmore">+${g.list.length-3} más</span>`:''}</div></div>`;
+  }).join('');
+  return {html,shown};
+}
+
 function secCount(id){
   if(S.mode==='demo')return secItems(id).length;
   const st=G.secs[id];if(!st)return 0;
@@ -1005,7 +1099,8 @@ function fromThread(p,id){
   Object.assign(m,{gm:true,subject:decode(lm.subject||ms[0].subject||'')||'(sin asunto)',snippet:decode(lm.snippet||''),
     t:+lm.internalDate||Date.parse(lm.date)||0,unread:labels.has('UNREAD'),pinned:labels.has('STARRED'),trash:labels.has('TRASH'),
     inInbox:labels.has('INBOX'),sent:allSent,from:parseAddr((incoming||lm).sender,dn),to:parseAddr((lm.toRecipients||[])[0],dn),
-    count:p.messageCount||ms.length,cat:catOf(labels),first:parseAddr(ms[0].sender,dn),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
+    count:p.messageCount||ms.length,cat:catOf(labels),first:parseAddr(ms[0].sender,dn),
+    files:ms.flatMap(x=>(x.attachmentIds||[]).map((n,i)=>({name:typeof n==='string'?n:(n&&n.filename)||'adjunto',mid:x.id,i}))),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
     parts:[...new Set(ms.map(x=>{const a=parseAddr(x.sender,dn);return (x.labelIds||[]).includes('SENT')?'Yo':String(a.name||'').split(/\s+/)[0]}).filter(Boolean))],url:typeof p.viewUrl==='string'&&p.viewUrl.startsWith('https://mail.google.com/')?p.viewUrl:null,dn});
   return m;
 }
@@ -1052,7 +1147,7 @@ async function loadSmart(force){
   const simple=(PREF.inboxType||'unread')==='simple';
   const ids=simple?['all']:activeSecs().map(x=>x.id);
   G.loading.smart=true;G.err.smart=null;renderList();
-  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:3),force})));
+  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:(id==='people'?12:3)),force})));
   const errs=ids.map(id=>G.secs[id]&&G.secs[id].err).filter(Boolean);
   if(errs.length===ids.length)G.err.smart=errs[0];
   G.loading.smart=false;renderAll();
@@ -1114,6 +1209,9 @@ async function initDb(){
   if(uid){
     prefRef=db.doc('data/users/'+uid+'/prefs');
     prefRef.onSnapshot(s=>{if(s.exists){Object.assign(PREF,s.data());renderAll()}},()=>{prefRef=null});
+    followCol=prefRef.collection('followups');schedCol=prefRef.collection('scheduled');snzCol=prefRef.collection('snz');
+    followCol.onSnapshot(q=>{FOLLOW=q.docs.map(d=>Object.assign({id:d.id},d.data()));renderNav();if(['smart','follow'].includes(S.folder))renderList()},()=>{});
+    schedCol.onSnapshot(q=>{SCHED=q.docs.map(d=>Object.assign({id:d.id},d.data()));renderNav();if(S.folder==='sched')renderList()},()=>{});
     noteCol=prefRef.collection('notes');
     noteCol.orderBy('updated','desc').limit(100).onSnapshot(s=>{notes=s.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.folder==='notes'){renderList();if(S.sel&&String(S.sel).startsWith('note:')&&!noteDraft)renderReader()}},()=>{noteCol=null});
   }
@@ -1134,6 +1232,9 @@ const nameOf=id=>id===uid?'Tú':(names[id]||'Alguien del equipo');
 function renderNav(){
   const cnt=f=>{
     if(f==='notes')return notes.length;
+    if(f==='follow')return FOLLOW.filter(x=>x.state==='due').length;
+    if(f==='sched')return SCHED.length;
+    if(f==='files')return 0;
     if(f==='team')return shared.length;
     if(f==='smart'){if(S.mode==='gmail'&&(PREF.inboxType||'unread')==='unread')return ['prio','people','notif','news'].reduce((a,id)=>a+secCount(id),0);return listFor('smart').filter(m=>m.unread).length}
     const l=listFor(f);return l.length};
@@ -1177,7 +1278,7 @@ function rowHTML(m,sec){
       <div class="r-top">${m.important?'<span class="ibar" title="Importante"></span>':''}<span class="r-from">${m.sent?'Para: ':''}${esc(people(m))}</span><span class="r-time">${esc(fmt(time(m)))}</span></div>
       <div class="r-mid">${pr?`<span class="bolt" title="Prioridad">${ic.bolt}</span>`:''}<span class="r-subj">${esc(m.subject)}</span>${m.pinned?`<span class="rpin" title="Anclado">${ic.pinF}</span>`:''}${n>1?`<span class="cnt">${n}</span>`:''}${clip?`<span class="clip clip-t">${ic.clip}</span>`:''}</div>
       <div class="r-bot"><span class="r-prev">${snz}${esc(preview(m))}</span>${clip?`<span class="clip clip-b">${ic.clip}</span>`:''}</div>
-      ${m.important&&m.cat==='people'?'<div class="chips"><span class="chip">Importantes</span></div>':''}
+      ${chipsHTML(m)}
     </div>
     ${m.trash?'':`<div class="hover-acts">
       <button data-act="prio" title="${pr?'Quitar prioridad':'Prioridad'} (P)" aria-label="Prioridad">${pr?ic.bolt:ic.boltL}</button>
@@ -1197,44 +1298,78 @@ function secCard(sec){
   const st=S.mode==='gmail'?G.secs[sec.id]:null;
   if(!items.length&&!(st&&st.loading&&!st.ids.length))return '';
   if(!items.length)return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span></div><div class="loading"><div class="sk"></div></div></section>`;
-  const shown=items.slice(0,3);visible.push(...shown);
+  let shown,body;
+  if(sec.id==='people'){const r=groupRows(items,'people',3);shown=r.shown;body=r.html}else{shown=items.slice(0,3);body=shown.map(m=>rowHTML(m,sec.id)).join('')}
+  visible.push(...shown);
   const clear=['people','notif','news','seen'].includes(sec.id);
   const lab=isMob()&&sec.mlabel?sec.mlabel:sec.label,icn=ic[isMob()&&sec.micon?sec.micon:sec.icon];
   return `<section class="sec card ${sec.id}"><div class="sec-h">${icn}<span>${lab}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
-    ${shown.map(m=>rowHTML(m,sec.id)).join('')}
+    ${body}
     ${count>shown.length?`<button class="showall" data-section="${sec.id}">Mostrar todo (${count})</button>`:''}</section>`;
 }
 function fullList(id,label){
   const items=secItems(id);visible.push(...items);
   const st=S.mode==='gmail'?G.secs[id]:null;
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
-  h+=items.length?`<section class="sec card full ${id}">${items.map(m=>rowHTML(m,id)).join('')}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
+  h+=items.length?`<section class="sec card full ${id}">${id==='people'?groupRows(items,'people',0).html:items.map(m=>rowHTML(m,id)).join('')}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
   if(st&&st.loading)h+=skeleton('Cargando correos…');
   else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
   return h;
 }
+function followRow(f){
+  const due=f.state==='due';
+  return `<div class="frow">${avatar({name:f.toName||f.to})}<div class="rb"><div class="r-top"><span class="r-from">${esc(f.toName||f.to)}</span><span class="r-time">${esc(fmt(f.sentAt))}</span></div>
+    <div class="r-mid"><span class="r-subj">${esc(f.subject||'(sin asunto)')}</span></div>
+    <div class="r-bot"><span class="r-prev">${due?'Sin respuesta desde '+esc(longDate(f.sentAt)):'Te aviso si no responde antes del '+esc(longDate(f.due))}</span></div>
+    <div class="fact"><button class="qchip" data-fwrite="${esc(f.id)}">Escribir de nuevo</button><button class="qchip" data-fdone="${esc(f.id)}">${due?'Listo':'Quitar recordatorio'}</button></div></div></div>`;
+}
+function renderFollowList(L){
+  const l=FOLLOW.slice().sort((a,b)=>(a.state==='due'?0:1)-(b.state==='due'?0:1)||a.due-b.due);
+  L.innerHTML=l.length?`<section class="sec card full">${l.map(followRow).join('')}</section>`:`<div class="empty"><b>Nada en seguimiento</b>Al enviar un correo, elige "Recordarme si no responden" y aparecerá aquí.</div>`;
+}
+function renderSchedList(L){
+  const l=SCHED.slice().sort((a,b)=>a.at-b.at);
+  L.innerHTML=l.length?`<section class="sec card full">${l.map(x=>`<div class="frow">${avatar({name:(x.to&&x.to[0])||'?'})}<div class="rb"><div class="r-top"><span class="r-from">Para: ${esc((x.to||[]).join(', '))}</span></div>
+    <div class="r-mid"><span class="r-subj">${esc(x.subject||'(sin asunto)')}</span></div>
+    <div class="r-bot"><span class="r-prev">${x.error?'No se pudo enviar; se reintenta el '+esc(longDate(x.at)):'Se enviará el '+esc(longDate(x.at))}</span></div>
+    <div class="fact"><button class="qchip" data-snow="${esc(x.id)}">Enviar ahora</button><button class="qchip" data-scancel="${esc(x.id)}">Cancelar envío</button></div></div></div>`).join('')}</section>`
+    :`<div class="empty"><b>Nada programado</b>Al redactar, elige cuándo enviar: en 1 hora, mañana a las 8:00 o la fecha que quieras.</div>`;
+}
+const fileKind=n=>{const e=(String(n).split('.').pop()||'').toLowerCase();return /pdf/.test(e)?'pdf':/^(xlsx?|csv|ods)$/.test(e)?'xls':/^(docx?|odt|rtf)$/.test(e)?'doc':/^(png|jpe?g|gif|webp|heic)$/.test(e)?'img':'other'};
+function renderFilesList(L){
+  const items=secItems('files'),st=S.mode==='gmail'?G.secs.files:null,type=S.fileType||'all',pj=S.filters.proj;
+  const files=[];items.forEach(m=>{const fs=m.files&&m.files.length?m.files:(m.attach?[{name:m.attach.name,size:m.attach.size}]:[]);fs.forEach(f=>files.push({...f,m}))});
+  const list=files.filter(f=>(type==='all'||fileKind(f.name)===type)&&(!pj||(projOf(f.m)||{}).name===pj));
+  visible.push(...items);
+  const tabs=[['all','Todos'],['pdf','PDF'],['xls','Excel'],['doc','Word'],['img','Imágenes'],['other','Otros']];
+  let h=`<div class="fbar inlist">${tabs.map(([k,l])=>`<button class="fchip ${type===k?'on':''}" data-ftype="${k}">${l}</button>`).join('')}${(PREF.projects||[]).map(p=>`<button class="fchip proj ${pj===p.name?'on':''}" data-fproj="${esc(p.name)}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')}</div>`;
+  if(list.length)h+=`<div class="lib">${list.map(f=>{const href=caps.server&&f.mid?`/api/attachment?m=${encodeURIComponent(f.mid)}&i=${f.i}&n=${encodeURIComponent(f.name)}`:'';
+    return `<div class="libitem">${href?`<a href="${href}" target="_blank" rel="noopener" class="libfile" title="Abrir ${esc(f.name)}">${fileTile(f)}</a>`:`<div class="libfile">${fileTile(f)}</div>`}<button class="libmeta" data-open="${esc(f.m.id)}"><b>${esc(f.m.from.name)}</b><span>${esc(f.m.subject)}</span><small>${esc(fmt(time(f.m)))}</small></button></div>`}).join('')}</div>`;
+  else if(items.length&&!files.length)h+=card('files','',items);
+  else if(!(st&&st.loading))h+=`<div class="empty"><b>Sin adjuntos</b>No hay archivos con estos filtros.</div>`;
+  if(st&&st.loading)h+=skeleton('Buscando adjuntos…');else if(st&&st.token)h+=`<button class="showall" data-loadmore="files">Cargar más</button>`;
+  L.innerHTML=h;
+}
 function renderList(){
   const f=folders().find(x=>x.id===S.folder)||{label:''};
-  $('#listTitle').textContent=S.q&&S.folder!=='notes'&&S.folder!=='team'?'Resultados':f.label;
-  const isInbox=S.folder==='smart'&&!S.q;
+  const mailFolder=!['notes','team','files','follow','sched'].includes(S.folder);
+  const srch=mailFolder&&searchActive();
+  $('#listTitle').textContent=srch?'Resultados':f.label;
+  const isInbox=S.folder==='smart'&&!srch;
+  $('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch)?filterBar():'';
   $('#ttl').classList.toggle('plain',!isInbox);
-  $('#ttlMain').textContent=isInbox?(isMob()?'Bandeja':'Bandeja de entrada'):(S.q&&S.folder!=='notes'&&S.folder!=='team'?'Resultados':f.label);
+  $('#ttlMain').textContent=isInbox?(isMob()?'Bandeja':'Bandeja de entrada'):(srch?'Resultados':f.label);
   $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:isMob()?'Elementos no leídos':'Tarjetas no leídas',simple:'Lista simple'}[PREF.inboxType||'unread']):'';
   $('#ttlSub').hidden=!isInbox;
   const L=$('#list');visible=[];
   if(S.folder==='notes')return renderNotesList(L);
   if(S.folder==='team')return renderTeamList(L);
-  if(S.q){
-    let res;
-    if(S.mode==='gmail'){
-      if(G.searchLoading){L.innerHTML=skeleton('Buscando…');return}
-      if(G.searchErr){L.innerHTML=errBox(G.searchErr,'search');return}
-      res=(G.search||[]).map(id=>G.map[id]).filter(m=>m&&m.subject!==undefined).sort(byTime);
-    }else{
-      const q=S.q.toLowerCase();
-      res=mails.filter(m=>!m.blocked&&[m.from.name,m.from.email,m.subject,preview(m),m.to?m.to.name:''].join(' ').toLowerCase().includes(q)).sort(byTime);
-    }
-    L.innerHTML=res.length?card('res','Coincidencias',res):`<div class="empty"><b>Sin resultados</b>Nada coincide con “${esc(S.q)}”. Prueba con un nombre o una palabra del asunto.</div>`;
+  if(S.folder==='files')return renderFilesList(L);
+  if(S.folder==='follow')return renderFollowList(L);
+  if(S.folder==='sched')return renderSchedList(L);
+  if(srch){
+    const res=secItems('search'),st=S.mode==='gmail'?G.secs.search:null;
+    L.innerHTML=res.length||(st&&st.loading)?fullList('search',''):`<div class="empty"><b>Sin resultados</b>Nada coincide con tu búsqueda. Prueba con otra palabra o quita algún filtro.</div>`;
     return;
   }
   let html='';
@@ -1257,9 +1392,11 @@ function renderList(){
     html+=(S.gateAll?gate:gate.slice(0,1)).map(m=>`<div class="gate-card" data-id="${esc(m.id)}">${avatar(m.from)}<div class="who"><b>${esc(m.from.name)}</b><span>${esc(m.from.email)}</span><small>${ic.mailI}${esc(m.subject)}</small></div>
       <button class="thumb yes" data-gate="ok" title="Aceptar remitente" aria-label="Aceptar a ${esc(m.from.name)}">${ic.thumbU}</button><button class="thumb no" data-gate="block" title="Bloquear remitente" aria-label="Bloquear a ${esc(m.from.name)}">${ic.thumbD}</button></div>`).join('');
   }
+  const due=caps.server?FOLLOW.filter(x=>x.state==='due'):[];
+  if(due.length)html+=`<section class="sec card follow"><div class="sec-h">${ic.hourglass}<span>Esperando respuesta</span></div>${due.map(followRow).join('')}</section>`;
   const cards=activeSecs().map(secCard).join('');
   html+=cards;
-  if(!cards&&!gate.length)html+=S.mode==='gmail'&&G.loading.smart?skeleton('Cargando tu bandeja…'):`<div class="empty"><div class="zero">0</div><b>Bandeja al día</b>No queda nada pendiente. Lo pospuesto volverá cuando toque.</div>`;
+  if(!cards&&!gate.length&&!due.length)html+=S.mode==='gmail'&&G.loading.smart?skeleton('Cargando tu bandeja…'):`<div class="empty"><div class="zero">0</div><b>Bandeja al día</b>No queda nada pendiente. Lo pospuesto volverá cuando toque.</div>`;
   L.innerHTML=html;
 }
 function errBox(e,kind){
@@ -1308,7 +1445,7 @@ function renderReader(){
     return `<article class="mcard ${col?'collapsed':''}" data-i="${i}">
       <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x)}<span class="sp"></span><time>${x.pending?'Enviando…':esc(longDate(x.t))}</time></div>
       ${col?`<div class="mprev" data-expandmsg>${esc(plain(x.text.join(' ')))}</div>`:`<div class="mbody">${x.text.map(p=>`<p>${p}</p>`).join('')}</div>
-      ${at.length?`<div class="atts"><div class="atts-h">${ic.clip}<span>${at.length===1?'1 adjunto':at.length+' adjuntos'}</span></div><div class="ftiles">${at.map(fileTile).join('')}</div></div>`:''}
+      ${at.length?`<div class="atts"><div class="atts-h">${ic.clip}<span>${at.length===1?'1 adjunto':at.length+' adjuntos'}</span></div><div class="ftiles">${at.map((a,k)=>caps.server&&x.id?`<a class="libfile" href="/api/attachment?m=${encodeURIComponent(x.id)}&i=${k}&n=${encodeURIComponent(a.name||a)}" target="_blank" rel="noopener" title="Abrir">${fileTile(a)}</a>`:fileTile(a)).join('')}</div></div>`:''}
       ${last&&!m.sent?`<div class="qrow"><button class="aiq" data-ai="draft" title="Redactar respuesta con IA">+ai</button>${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
     </article>`}).join('');
   else if(m.bodyErr)msgsH=`<div class="errbox"><b>No se pudo abrir el correo</b><p>${esc(errText(m.bodyErr))}</p><div class="row-btns"><button class="send" data-retrybody>Reintentar</button></div></div>`;
@@ -1335,7 +1472,7 @@ function renderReader(){
       <div class="reply" id="replyWrap" ${open?'':'hidden'}><textarea id="replyBox" placeholder="Responder a ${esc(replyTo&&replyTo.name)}…"></textarea>
         <div class="dict-partial" id="dp-reply" hidden></div>
         <div class="reply-foot">${micBtn('reply')}${caps.sample&&!aiOff?`<button class="ghost ai-draft" data-ai="draft" title="Escribe una idea y la IA redacta la respuesta">${ic.spark}<span>Redactar con IA</span></button>`:''}${tplSelect('replyTpl')}
-          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}<small></small><button class="send" data-act="send">Enviar</button></div></div>
+          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}${caps.server&&S.mode==='gmail'?FOLLOW_SEL('rFollow'):''}<small></small><button class="send" data-act="send">Enviar</button></div></div>
     </div>${ask}`;
   const rb=$('#replyBox');if(rb&&draft)rb.value=draft;
 }
@@ -1644,7 +1781,7 @@ function openSnooze(m,anchor){
   closePop();
   const p=document.createElement('div');p.className='pop';p.setAttribute('role','menu');
   p.innerHTML='<h3>Posponer hasta</h3>'+snoozeOpts().map(([l,t],i)=>`<button role="menuitem" id="snz-${i}" data-t="${t}"><span>${l}</span><small>${esc(fmt(t))}</small></button>`).join('')+
-    (m.gm?'<p class="hint" style="padding:4px 8px 6px">Se oculta de tu bandeja en Brisa hasta esa hora.</p>':'');
+    (m.gm?`<p class="hint" style="padding:4px 8px 6px">${caps.server?'Sale de tu bandeja y vuelve a esa hora, con aviso.':'Se oculta de tu bandeja en Brisa hasta esa hora.'}</p>`:'');
   document.body.appendChild(p);
   const r=(anchor||document.querySelector(`.row[data-id="${CSS.escape(m.id)}"]`)||$('#reader')).getBoundingClientRect();
   const pw=p.offsetWidth,ph=p.offsetHeight;
@@ -1655,9 +1792,20 @@ function openSnooze(m,anchor){
     const s=snap(m),until=+b.dataset.t;
     if(m.gm){PREF.snoozes[m.id]={id:m.id,until,subject:m.subject,snippet:preview(m).slice(0,200),from:m.from,t:time(m),cat:m.cat};savePrefs()}
     else{m.snooze=until;m.done=false}
+    const real=m.gm&&caps.server&&snzCol,sid=String(m.id).replace(/[^A-Za-z0-9_\-]/g,'_').slice(0,180);
+    if(real){snzCol.doc(sid).set({threadId:m.id,until,subject:m.subject,fromName:m.from&&m.from.name||''}).catch(()=>{});gRun(()=>gcall('unlabel_thread',{threadId:m.id,labelIds:['INBOX']}))}
     closePop();leaving(m);renderAll();
-    toast('Pospuesto hasta '+longDate(until),()=>{restore(m,s);if(m.gm)savePrefs()});};
+    toast('Pospuesto hasta '+longDate(until),()=>{restore(m,s);if(m.gm)savePrefs();if(real){snzCol.doc(sid).delete().catch(()=>{});gRun(()=>gcall('label_thread',{threadId:m.id,labelIds:['INBOX']}))}});};
 }
+
+/* Seguimiento: recordar si no responden (lo revisa el servidor) */
+function addFollow(o){
+  if(!followCol||!o.days||!o.to)return;
+  const sentAt=Date.now();
+  followCol.doc('f'+sentAt.toString(36)+Math.random().toString(36).slice(2,6)).set({to:String(o.to).toLowerCase(),toName:o.toName||o.to,subject:o.subject||'',sentAt,due:sentAt+o.days*D,state:'waiting',checkedAt:0})
+    .then(()=>toast(`Te aviso si ${o.toName||o.to} no responde en ${o.days===1?'1 día':o.days===7?'1 semana':o.days+' días'}`,null,4000)).catch(()=>{});
+}
+const FOLLOW_SEL=id=>`<select id="${id}" class="rfollow" aria-label="Recordarme si no responden"><option value="0">⏰ Sin recordatorio</option><option value="1">⏰ Si no responden en 1 día</option><option value="2">⏰ … en 2 días</option><option value="7">⏰ … en 1 semana</option></select>`;
 
 /* Envío con 5 s para deshacer */
 function queueSend(label,doIt,cancel){
@@ -1671,6 +1819,7 @@ function sendReply(){
   const raw=box.value.trim();if(!raw){box.focus();return}
   if(m.gm&&!m.msgs){toast('Espera a que cargue el correo para responder.');return}
   const body=withSig(raw,$('#sigOn')?$('#sigOn').checked:false);
+  const fDays=+(($('#rFollow')||{}).value||0),rTo=m.sent?m.to:m.from;
   const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true};
   m.msgs.push(msg);box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
   renderReader();
@@ -1680,6 +1829,7 @@ function sendReply(){
       if(m.gm){const target=[...m.msgs].reverse().find(x=>x.id&&!x.sent)||[...m.msgs].reverse().find(x=>x.id);
         await gcall('reply',{messageId:target.id,body});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
       msg.pending=false;if(S.sel===m.id)renderReader();toast('Respuesta enviada');
+      if(fDays&&rTo)addFollow({to:rTo.email,toName:rTo.name,subject:m.subject,days:fDays});
     }catch(e){undo();toast(errText(e)+' Tu respuesta quedó en el borrador.',null,8000)}
   },undo);
 }
@@ -1704,7 +1854,8 @@ function openCompose(pre={}){
     <div class="dict-partial" id="dp-compose" hidden></div>
     <footer>
       ${micBtn('compose')}${tplSelect('cTpl')}
-      ${gm?'':'<select id="cWhen" aria-label="Cuándo enviar"><option value="0">Enviar ahora</option><option value="60">En 1 hora</option><option value="tm">Mañana a las 8:00</option></select>'}
+      ${!gm||caps.server?`<select id="cWhen" aria-label="Cuándo enviar"><option value="0">Enviar ahora</option><option value="60">En 1 hora</option><option value="tm">Mañana a las 8:00</option><option value="mon">El lunes a las 8:00</option>${caps.server?'<option value="pick">Elegir fecha y hora…</option>':''}</select><input type="datetime-local" id="cAt" aria-label="Fecha y hora de envío" hidden>`:''}
+      ${gm&&caps.server?FOLLOW_SEL('cFollow'):''}
       <span class="sp"></span><button class="ghost" data-x>Descartar</button><button class="send" id="cSend">Enviar</button>
     </footer>`);
   const cTo=sc.querySelector('#cTo'),cSub=sc.querySelector('#cSub'),cBody=sc.querySelector('#cBody');
@@ -1714,6 +1865,7 @@ function openCompose(pre={}){
   else if(PREF.signature)cBody.value='\n\n-- \n'+PREF.signature;
   const save=()=>{try{localStorage.setItem('brisa-draft',JSON.stringify({to:cTo.value,sub:cSub.value,body:cBody.value}))}catch(e){}};
   sc.addEventListener('input',save);
+  const cW=sc.querySelector('#cWhen');if(cW)cW.addEventListener('change',()=>{const a=sc.querySelector('#cAt');a.hidden=cW.value!=='pick';if(!a.hidden){const d=new Date(Date.now()+H);d.setMinutes(0,0,0);a.value=new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,16);a.focus()}});
   (pre.to?cBody:cTo).focus();if(!pre.to&&!cTo.value)cTo.focus();else{cBody.focus();cBody.setSelectionRange(0,0)}
   sc.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))sc.querySelector('#cSend').click()});
   sc.querySelector('#cSend').onclick=()=>{
@@ -1721,15 +1873,22 @@ function openCompose(pre={}){
     const to=cTo.value.split(/[,;\s]+/).map(s=>s.trim()).filter(Boolean);
     if(!to.length||!to.every(a=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a))){err.textContent='Escribe direcciones válidas en “Para”, separadas por coma. Por ejemplo: nombre@correo.com';err.hidden=false;cTo.focus();return}
     if(!cBody.value.trim()&&!cSub.value.trim()){err.textContent='El mensaje está vacío. Agrega un asunto o un texto.';err.hidden=false;cBody.focus();return}
-    const w=gm?'0':sc.querySelector('#cWhen').value;
+    const w=(sc.querySelector('#cWhen')||{value:'0'}).value,follow=+((sc.querySelector('#cFollow')||{}).value||0);
     let when=Date.now();if(w==='60')when+=H;if(w==='tm'){const t=new Date();t.setDate(t.getDate()+1);t.setHours(8,0,0,0);when=t.getTime()}
+    if(w==='mon'){const t=new Date();t.setDate(t.getDate()+((8-t.getDay())%7||7));t.setHours(8,0,0,0);when=t.getTime()}
+    if(w==='pick'){when=new Date(sc.querySelector('#cAt').value).getTime();if(!(when>Date.now()+60000)){err.textContent='Elige una fecha y hora futuras para el envío.';err.hidden=false;return}}
     const subject=cSub.value.trim()||'(sin asunto)',body=cBody.value.trim();
     try{localStorage.removeItem('brisa-draft')}catch(e){}
     sc.remove();
     const restoreDraft=()=>{try{localStorage.setItem('brisa-draft',JSON.stringify({to:to.join(', '),sub:subject,body}))}catch(e){}};
+    if(gm&&w!=='0'&&caps.server&&schedCol){
+      schedCol.doc('s'+Date.now().toString(36)).set({to,subject,body,at:when,followDays:follow||0,createdAt:Date.now()})
+        .then(()=>toast('Programado para el '+longDate(when)+'. Lo ves en Programados.',null,5000)).catch(()=>{restoreDraft();toast('No se pudo programar el envío.')});
+      return;
+    }
     if(gm){
       queueSend('Enviando…',async()=>{
-        try{await gcall('send_message',{to,subject,body});try{await caps.mcp.invalidate('Gmail')}catch(e){}toast('Mensaje enviado');if(S.folder==='sent')loadFolder('sent',true)}
+        try{await gcall('send_message',{to,subject,body});try{await caps.mcp.invalidate('Gmail')}catch(e){}toast('Mensaje enviado');if(S.folder==='sent')loadFolder('sent',true);if(follow)addFollow({to:to[0],subject,days:follow})}
         catch(e){restoreDraft();toast(errText(e)+' Tu mensaje quedó guardado como borrador.',null,8000)}
       },()=>{restoreDraft();openCompose()});
     }else{
@@ -1741,7 +1900,7 @@ function openCompose(pre={}){
 function openSettings(){
   const tpls=PREF.templates.map(t=>({...t}));
   const draw=sc=>{sc.querySelector('#tplList').innerHTML=tpls.map((t,i)=>`<div class="tpl"><div class="h"><input type="text" id="tn-${i}" data-tn="${i}" value="${esc(t.name)}" aria-label="Nombre de la plantilla"><button class="icon-btn" data-tdel="${i}" aria-label="Eliminar plantilla">${ic.trash}</button></div><textarea id="tb-${i}" data-tb="${i}" aria-label="Texto de la plantilla">${esc(t.body)}</textarea></div>`).join('')||'<p class="hint">No tienes plantillas.</p>'};
-  modal(`<header><b>Firma y plantillas</b><button class="icon-btn" data-x aria-label="Cerrar">${ic.x}</button></header>
+  modal(`<header><b>Ajustes</b><button class="icon-btn" data-x aria-label="Cerrar">${ic.x}</button></header>
     <div class="body">
       <label class="lbl" for="sigTxt">Firma</label>
       <textarea id="sigTxt" placeholder="Nombre Apellido&#10;Cargo · Empresa&#10;+56 9 1234 5678">${esc(PREF.signature)}</textarea>
@@ -1750,6 +1909,14 @@ function openSettings(){
       <div id="tplList" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="ghost" id="tplAdd" style="align-self:flex-start">+ Agregar plantilla</button>
       <p class="hint">${prefRef?'Se guardan en tu cuenta y solo tú puedes verlas.':'Se guardan solo en este navegador.'}</p>
+      <label class="lbl">Proyectos</label>
+      <p class="hint">Los correos que mencionan un proyecto en el asunto o el texto llevan su etiqueta de color, y puedes filtrar por proyecto.</p>
+      <div id="projList" class="projlist"></div>
+      <div id="projSug" class="ai-chips"></div>
+      <button class="ghost" id="projAdd" style="align-self:flex-start">+ Agregar proyecto</button>
+      ${caps.server?`<label class="lbl">Resumen de la mañana</label>
+      <label class="sig" style="font-size:14px;color:var(--fg)"><input type="checkbox" id="dgOn" ${PREF.digest&&PREF.digest.on?'checked':''}> Avisarme cada mañana lo pendiente, a las <input type="time" id="dgTime" value="${esc((PREF.digest&&PREF.digest.time)||'08:00')}" aria-label="Hora del resumen"></label>
+      <p class="hint">Llega como notificación: sin leer, de prioridad y correos que esperan respuesta. Necesita los avisos activados.</p>`:''}
       ${caps.desktop&&caps.desktop.notification?`<label class="lbl">Avisos</label><label class="sig" style="font-size:14px;color:var(--fg)"><input type="checkbox" id="notifyOn" ${PREF.notify?'checked':''}> Avisarme de correos nuevos aunque la app esté en segundo plano</label>`:`<p class="hint">Los correos nuevos aparecen solos en la bandeja${S.mode==='gmail'?' (se revisa cada 30 segundos)':''}. Para recibir avisos del sistema, instala Brisa como app.</p>`}
     </div>
     <footer><span class="sp"></span><button class="ghost" data-x>Cancelar</button><button class="send" id="setSave">Guardar</button></footer>`,sc=>{
@@ -1757,10 +1924,22 @@ function openSettings(){
     sc.addEventListener('input',e=>{const t=e.target;if(t.dataset.tn)tpls[t.dataset.tn].name=t.value;if(t.dataset.tb)tpls[t.dataset.tb].body=t.value});
     sc.addEventListener('click',e=>{const d=e.target.closest('[data-tdel]');if(d){tpls.splice(+d.dataset.tdel,1);draw(sc)}});
     sc.querySelector('#tplAdd').onclick=()=>{tpls.push({name:'Nueva plantilla',body:''});draw(sc);sc.querySelector(`#tn-${tpls.length-1}`).select()};
+    const projs=(PREF.projects||[]).map(p=>({name:p.name,color:p.color,keys:(p.keys||[]).join(', ')}));
+    const drawP=()=>{sc.querySelector('#projList').innerHTML=projs.map((p,i)=>`<div class="proj"><button class="pdot" data-pcol="${i}" style="background:${p.color}" aria-label="Cambiar color"></button><input type="text" data-pn="${i}" value="${esc(p.name)}" placeholder="Nombre (ej. Ciudad Siete)" aria-label="Nombre del proyecto"><input type="text" data-pk="${i}" value="${esc(p.keys)}" placeholder="Otras palabras clave, separadas por coma" aria-label="Palabras clave"><button class="icon-btn" data-pdel="${i}" aria-label="Eliminar proyecto">${ic.trash}</button></div>`).join('')||'<p class="hint">Aún no tienes proyectos.</p>';
+      const sug=suggestProjects().filter(g=>!projs.some(p=>norm(p.name)===norm(g)));sc.querySelector('#projSug').innerHTML=sug.length?'<span class="hint">Sugeridos:</span>'+sug.map(g=>`<button data-psug="${esc(g)}">+ ${esc(g)}</button>`).join(''):''};
+    drawP();
+    const addP=n=>{projs.push({name:n||'',color:PCOL[projs.length%PCOL.length],keys:''});drawP();const el=sc.querySelector(`[data-pn="${projs.length-1}"]`);if(el&&!n)el.focus()};
+    sc.querySelector('#projAdd').onclick=()=>addP('');
+    sc.addEventListener('input',e=>{const t=e.target;if(t.dataset.pn)projs[t.dataset.pn].name=t.value;if(t.dataset.pk)projs[t.dataset.pk].keys=t.value});
+    sc.addEventListener('click',e=>{const c=e.target.closest('[data-pcol]');if(c){const p=projs[+c.dataset.pcol];p.color=PCOL[(PCOL.indexOf(p.color)+1)%PCOL.length];drawP();return}
+      const d=e.target.closest('[data-pdel]');if(d){projs.splice(+d.dataset.pdel,1);drawP();return}
+      const g=e.target.closest('[data-psug]');if(g)addP(g.dataset.psug)});
     sc.querySelector('#setSave').onclick=()=>{
       const nOn=sc.querySelector('#notifyOn');
       if(nOn&&nOn.checked&&!PREF.notify){caps.desktop.notification.show({body:'Listo: te avisaré cuando llegue un correo nuevo.'}).then(()=>{PREF.notify=true;savePrefs()}).catch(()=>{PREF.notify=false;toast('No se activaron los avisos: el permiso fue rechazado.')})}
       else if(nOn&&!nOn.checked)PREF.notify=false;
+      PREF.projects=projs.filter(p=>p.name.trim()).map(p=>({name:p.name.trim().slice(0,40),color:p.color,keys:[p.name.trim(),...String(p.keys||'').split(',').map(x=>x.trim()).filter(Boolean)].slice(0,8)}));
+      const dg=sc.querySelector('#dgOn');if(dg){PREF.digest={on:dg.checked,time:sc.querySelector('#dgTime').value||'08:00'};try{PREF.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}}
       PREF.signature=sc.querySelector('#sigTxt').value.trim().slice(0,1000);
       PREF.templates=tpls.filter(t=>t.name.trim()||t.body.trim()).map(t=>({name:t.name.trim().slice(0,60)||'Sin nombre',body:t.body.slice(0,4000)}));
       savePrefs();sc.remove();toast('Ajustes guardados');renderReader();
@@ -1773,6 +1952,7 @@ function renderAll(){renderNav();renderList();renderReader();renderChat()}
 /* ---------- Eventos ---------- */
 function goFolder(f){
   S.section=null;S.replyOpen=null;
+  if(f==='files'&&S.mode==='gmail'&&!G.secs.files)setTimeout(()=>loadSec('files',{size:30}),0);
   S.folder=f;S.q='';$('#q').value='';S.sel=null;noteDraft=null;$('#app').classList.remove('reading','drawer');
   if(S.mode==='gmail'&&GQ[f]&&!G.lists[f]&&!G.loading[f])loadFolder(f);
   renderAll();
@@ -1795,6 +1975,14 @@ $('#list').addEventListener('click',e=>{
   if(e.target.closest('[data-secback]')){S.section=null;renderList();return}
   const lm=e.target.closest('[data-loadmore]');if(lm){if(S.mode==='gmail')loadSec(lm.dataset.loadmore,{more:true,size:25});return}
   if(e.target.closest('[data-gateall]')){S.gateAll=!S.gateAll;renderList();return}
+  const op=e.target.closest('[data-open]');if(op){openSel(op.dataset.open);return}
+  const gp=e.target.closest('[data-grp]');if(gp){S.openGrp[gp.dataset.grp]=!S.openGrp[gp.dataset.grp];renderList();return}
+  const ft=e.target.closest('[data-ftype]');if(ft){S.fileType=ft.dataset.ftype;renderList();return}
+  const fp=e.target.closest('[data-fproj]');if(fp&&S.folder==='files'){S.filters.proj=S.filters.proj===fp.dataset.fproj?'':fp.dataset.fproj;renderList();return}
+  const fw=e.target.closest('[data-fwrite]');if(fw){const f=FOLLOW.find(x=>x.id===fw.dataset.fwrite);if(f)openCompose({to:f.to,subject:'Re: '+String(f.subject||'').replace(/^(re:\s*)+/i,''),body:''});return}
+  const fd=e.target.closest('[data-fdone]');if(fd){if(followCol)followCol.doc(fd.dataset.fdone).delete().then(()=>toast('Recordatorio quitado')).catch(()=>toast('No se pudo quitar.'));return}
+  const sn=e.target.closest('[data-snow]');if(sn){if(schedCol)schedCol.doc(sn.dataset.snow).update({at:Date.now()}).then(()=>toast('Se enviará en menos de un minuto')).catch(()=>toast('No se pudo cambiar.'));return}
+  const scn=e.target.closest('[data-scancel]');if(scn){if(schedCol)schedCol.doc(scn.dataset.scancel).delete().then(()=>toast('Envío cancelado')).catch(()=>toast('No se pudo cancelar.'));return}
   const cl=e.target.closest('[data-clear]');if(cl){clearSection(cl.dataset.clear);return}
   const g=e.target.closest('[data-gate]');if(g){
     const m=getMail(g.closest('.gate-card,.gate-item').dataset.id);const s=snap(m);
@@ -1843,6 +2031,7 @@ $('#reader').addEventListener('click',e=>{
     menuAt(am,[['Resumir el hilo',ic.spark,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiSummary(m.id,threadText(m),'este hilo de correo')}],['Mapa mental',ic.tree,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiMap(m.id,threadText(m),'este hilo de correo')}],['Redactar respuesta',ic.reply,()=>{openReply(false);aiDraft(m)}],['Preguntarle al asistente',ic.spark,()=>openAI()]]);return}
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
     const it=[['Responder',ic.reply,()=>openReply()],['Reenviar',ic.fwd,()=>openCompose({subject:'Fwd: '+m.subject,body:'\n\n---------- Mensaje reenviado ----------\nDe: '+m.from.name+' <'+m.from.email+'>\nAsunto: '+m.subject+'\n\n'+(m.msgs?plain(lastOf(m).text.join('\n\n')):m.snippet||'')})]];
+    it.push(['Ver correos de esta persona',ic.person,()=>{S.filters={from:senderOf(m)};S.q='';$('#q').value='';S.folder='smart';S.section=null;$('.list-head').classList.add('searching');$('#app').classList.remove('reading');runSearch();renderNav()}]);
     if(caps.db&&uid)it.push(['Compartir con el equipo',ic.share,()=>act('share',m.id)]);
     if(m.url)it.push(['Abrir en Gmail',ic.ext,()=>window.open(m.url,'_blank','noopener')]);
     menuAt(mm,it);return}
@@ -1866,18 +2055,14 @@ $('#reader').addEventListener('keydown',e=>{
 });
 let sTimer;
 function runSearch(){
-  if(S.mode!=='gmail'||!S.q){renderList();return}
-  G.searchLoading=true;G.searchErr=null;renderList();const q=S.q;
-  gcall('search_threads',{query:q,pageSize:20,view:'THREAD_VIEW_IDS_ONLY'},{cache:{staleTime:30000,gcTime:300000}})
-    .then(async res=>{if(q!==S.q)return;const ids=((res&&res.threads)||[]).map(t=>t&&t.id).filter(Boolean);G.search=ids;G.searchLoading=false;renderList();
-      await pool(ids.filter(id=>!G.map[id]||G.map[id].subject===undefined),6,async id=>{const p=await gcall('get_thread',{threadId:id,messageFormat:'MINIMAL'},RCACHE);fromThread(p,id);if(q===S.q)schedule()})})
-    .catch(e=>{if(q!==S.q)return;G.searchLoading=false;G.searchErr=e;renderList()});
+  if(!searchActive()||S.mode!=='gmail'){renderList();return}
+  G.secs.search={ids:[],count:0,token:null};loadSec('search',{size:25,force:true});renderList();
 }
 $('#q').addEventListener('input',e=>{
   S.q=e.target.value.trim();
   if(S.folder==='notes'||S.folder==='team'){S.folder='smart';renderNav()}
   clearTimeout(sTimer);
-  if(S.mode==='gmail'&&S.q){sTimer=setTimeout(runSearch,450)}else renderList();
+  if(S.mode==='gmail'&&searchActive()){sTimer=setTimeout(runSearch,450)}else renderList();
 });
 $('#composeBtn').onclick=()=>openCompose();$('#composeBtn2').onclick=()=>openCompose();$('#fab').onclick=()=>openCompose();
 $('#settingsBtn').onclick=openSettings;
@@ -2039,7 +2224,11 @@ function openPicker(){
 }
 function closePicker(){document.getElementById('pick')?.remove();document.getElementById('pickScrim')?.remove()}
 $('#ttl').onclick=openPicker;
-$('#searchBtn').onclick=()=>{const h=$('.list-head');const on=!h.classList.contains('searching');h.classList.toggle('searching',on);if(on)$('#q').focus();else{$('#q').value='';if(S.q){S.q='';renderList()}}};
+$('#searchBtn').onclick=()=>{const h=$('.list-head');const on=!h.classList.contains('searching');h.classList.toggle('searching',on);if(on){if(!['smart','pinned','sent','done','trash','snoozed'].includes(S.folder))goFolder('smart');$('#q').focus();renderList()}else{$('#q').value='';S.q='';S.filters={};renderList()}};
+$('#fbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter],[data-fproj]');if(!b)return;
+  if(b.dataset.fproj!==undefined){S.filters.proj=S.filters.proj===b.dataset.fproj?'':b.dataset.fproj}
+  else{const k=b.dataset.filter;if(k==='from')delete S.filters.from;else S.filters[k]=!S.filters[k]}
+  S.section=null;runSearch()});
 $('#aiFab2').onclick=()=>openAI();$('#fab2').onclick=()=>openCompose();
 
 /* ---------- Correo nuevo en vivo ---------- */
@@ -2319,6 +2508,7 @@ if(window.claude&&typeof window.claude.use==='function'){
     if(m&&pref==='gmail')connectGmail();else renderAll();
   });
   claude.use('sample').then(s=>{caps.sample=s;renderAIFab();renderReader()});
+  claude.use('brisa').then(b=>{caps.server=!!(b&&b.server);renderAll()});
   claude.use('desktop').then(async d=>{caps.desktop=d;if(!d)return;
     const check=async()=>{try{installState=d.install?await d.install.state():'unavailable'}catch(e){installState='unavailable'}renderNav()};
     await check();window.addEventListener('brisa-install-change',check);
