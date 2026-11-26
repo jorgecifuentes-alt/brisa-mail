@@ -697,6 +697,22 @@ body{-webkit-font-smoothing:antialiased}
 }
 /* ===== Celular: igual a Spark para Android ===== */
 #calBtn{display:none}
+#fontBtn{display:none}
+@media (max-width:760px) and (pointer:coarse){#fontBtn{display:grid}.list-head .icon-btn{width:40px!important;height:44px!important}.list-head .icon-btn svg{width:23px!important;height:23px!important}.list-head .top{gap:0!important}.ttl{flex:1;padding:0 4px!important}}
+.gate-card .who{min-width:0}.gate-card .who span,.gate-card .who small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gate-acts .thumb{min-width:0}
+.list,.rbody{zoom:var(--zoom,1)}
+.pop.fsp{width:300px;padding:14px 16px 12px}
+.fsp .fs-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.fsp .fs-h b{font:600 16px var(--f-ui)}.fsp .fs-h span{color:var(--muted);font-size:13px}
+.fsp .fs-row{display:flex;align-items:center;gap:12px}
+.fsp .fs-b{width:56px!important;height:56px;flex:none;justify-content:center!important;border:1px solid var(--line);border-radius:14px!important;background:var(--panel);color:var(--fg);font-family:Georgia,serif}
+.fsp .fs-b:disabled{opacity:.35}
+.fsp .fs-dots{flex:1;display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.fsp .fs-dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.fsp .fs-dots i.base{outline:1.5px solid var(--faint);outline-offset:2px}
+.fsp .fs-dots i.on{background:var(--accent,#0B57D0);transform:scale(1.4)}
+.fsp .fs-reset{justify-content:center;margin-top:10px;color:var(--accent,#0B57D0);font-weight:500}
+.pop.fsp.sheet{left:0!important;right:0;bottom:0;top:auto!important;width:auto;border-radius:18px 18px 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px))}
 .clip-b{display:none!important}
 @media (max-width:760px){
   :root{--f-ui:Roboto,"Google Sans Text",system-ui,-apple-system,"Segoe UI",sans-serif;--f-display:Roboto,system-ui,sans-serif;
@@ -919,6 +935,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn" id="searchBtn" aria-label="Buscar" title="Buscar (/)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
         <button class="icon-btn nbtn" id="namesBtn" aria-label="Solo nombres (A-Z)" title="Solo nombres, de la A a la Z" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 10l2.5-6 2.5 6M4.3 8h3.4M3.5 14h5l-5 6h5"/><path d="M13 6h8M13 12h8M13 18h8"/></svg></button>
         <button class="icon-btn fbtn" id="filterBtn" aria-label="Filtrar y ordenar" title="Filtrar y ordenar"><svg class="i" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v6l-4-2v-4z"/></svg><i class="fdot" hidden></i></button>
+        <button class="icon-btn" id="fontBtn" aria-label="Tamaño de letra" title="Tamaño de letra"><svg class="i" viewBox="0 0 24 24"><path d="M2.5 18l4-11 4 11M4 14h5"/><path d="M13.5 18l3.5-9 3.5 9M14.7 15h4.6" style="stroke-width:1.6"/></svg></button>
         <a class="icon-btn" id="calBtn" href="https://calendar.google.com/" target="_blank" rel="noopener" aria-label="Calendario" title="Calendario"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><rect x="8" y="13" width="3" height="3" rx=".5" style="fill:currentColor"/></svg></a>
         <button class="icon-btn" id="refreshBtn" aria-label="Actualizar" title="Actualizar" hidden><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></button>
         <button class="icon-btn" id="settingsBtn" aria-label="Ajustes" title="Firma y plantillas"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
@@ -2363,6 +2380,7 @@ $('#reader').addEventListener('click',e=>{
     menuAt(am,[['Resumir el hilo',ic.spark,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiSummary(m.id,threadText(m),'este hilo de correo')}],['Mapa mental',ic.tree,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiMap(m.id,threadText(m),'este hilo de correo')}],['Redactar respuesta',ic.reply,()=>{openReply(false);aiDraft(m)}],['Preguntarle al asistente',ic.spark,()=>openAI()]]);return}
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
     const it=[['Responder',ic.reply,()=>openReply()],['Reenviar',ic.fwd,()=>openCompose({subject:'Fwd: '+m.subject,body:'\n\n---------- Mensaje reenviado ----------\nDe: '+m.from.name+' <'+m.from.email+'>\nAsunto: '+m.subject+'\n\n'+(m.msgs?plain(lastOf(m).text.join('\n\n')):m.snippet||'')})]];
+    if(isPhone())it.push(['Tamaño de letra',ic.doc,()=>openFontPanel(mm)]);
     it.push(['Ver correos de esta persona',ic.person,()=>{S.filters={from:senderOf(m)};S.q='';$('#q').value='';S.folder='smart';S.section=null;$('.list-head').classList.add('searching');$('#app').classList.remove('reading');runSearch();renderNav()}]);
     if(caps.db&&uid)it.push(['Compartir con el equipo',ic.share,()=>act('share',m.id)]);
     if(m.url)it.push(['Abrir en Gmail',ic.ext,()=>window.open(m.url,'_blank','noopener')]);
@@ -2407,6 +2425,25 @@ $('#list').addEventListener('click',e=>{
   const a=e.target.closest('[data-gall]');if(a){PREF.groupsCollapsed=!PREF.groupsCollapsed;S.gToggle={};savePrefs();renderList();return}
   const g=e.target.closest('[data-gcol]');if(g){S.gToggle=S.gToggle||{};S.gToggle[g.dataset.gcol]=!S.gToggle[g.dataset.gcol];renderList()}
 });
+/* ---------- Tamaño de letra (como en los lectores de libros) ----------
+ * Agranda o achica la lista y el correo abierto. Se guarda en este dispositivo. */
+const FS=[0.85,0.92,1,1.1,1.2,1.32,1.45,1.6];
+let fsIdx=2;try{const v=+localStorage.getItem('brisa-fs');if(v>=0&&v<FS.length&&localStorage.getItem('brisa-fs')!==null)fsIdx=v}catch(e){}
+function applyFS(){document.documentElement.style.setProperty('--zoom',FS[fsIdx]);try{localStorage.setItem('brisa-fs',fsIdx)}catch(e){}}
+applyFS();
+function openFontPanel(anchor){
+  closePop();
+  const p=document.createElement('div');p.className='pop fsp';p.setAttribute('role','dialog');p.setAttribute('aria-label','Tamaño de letra');
+  const draw=()=>{p.innerHTML=`<div class="fs-h"><b>Tamaño de letra</b><span>${Math.round(FS[fsIdx]*100)}%</span></div>
+    <div class="fs-row"><button type="button" class="fs-b" data-fs="-1" aria-label="Letra más pequeña" ${fsIdx===0?'disabled':''}><span style="font-size:15px">A</span></button>
+    <div class="fs-dots">${FS.map((_,i)=>`<i class="${i===fsIdx?'on':''} ${i===2?'base':''}"></i>`).join('')}</div>
+    <button type="button" class="fs-b" data-fs="1" aria-label="Letra más grande" ${fsIdx===FS.length-1?'disabled':''}><span style="font-size:26px">A</span></button></div>
+    <button type="button" class="fs-reset" data-fs="0">Tamaño normal</button>`};
+  draw();document.body.appendChild(p);
+  if(isMob())p.classList.add('sheet');else{const a=(anchor||$('#fontBtn')).getBoundingClientRect();p.style.left=Math.max(12,Math.min(a.left,innerWidth-p.offsetWidth-12))+'px';p.style.top=(a.bottom+6)+'px'}
+  p.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-fs]');if(!b)return;const d=+b.dataset.fs;fsIdx=d===0?2:Math.max(0,Math.min(FS.length-1,fsIdx+d));applyFS();draw()});
+}
+$('#fontBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fsp'))closePop();else openFontPanel($('#fontBtn'))};
 $('#namesBtn').onclick=()=>{
   const on=namesMode()&&PREF.namesCollapsed;
   if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
