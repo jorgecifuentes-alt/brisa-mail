@@ -170,6 +170,27 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .pop button:hover,.pop button:focus-visible{background:var(--sunk)}
 .pop button span{flex:1}
 .pop button small{font:12px var(--f-mono);color:var(--faint)}
+.fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
+.pop.fpanel{width:300px;padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
+.fpanel .fp-h{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 4px 16px}
+.fpanel .fp-h b{font:600 15px var(--f-ui)}
+.fpanel .fp-h .icon-btn{width:32px;height:32px;padding:0;justify-content:center}
+.fpanel .fp-b{overflow:auto;padding:0 6px 8px}
+.fpanel h3{margin:12px 10px 4px}
+.fpanel .fopt{padding:7px 10px;gap:8px}
+.fpanel .fopt .ck{width:18px;display:inline-flex;flex:none!important;opacity:0;color:var(--accent,#0B57D0)}
+.fpanel .fopt.on .ck{opacity:1}.fpanel .fopt.on{font-weight:600}
+.fpanel .fopt .ck .i{width:16px;height:16px}
+.fp-in{display:flex;align-items:center;gap:8px;margin:2px 6px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.fp-in .i{width:16px;height:16px;color:var(--faint)}
+.fp-in input{flex:1;border:0;background:transparent;font:inherit;color:var(--fg);outline:0;min-width:0}
+.fp-range{display:flex;gap:8px;padding:4px 10px}
+.fp-range label{flex:1;display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.fp-range input{border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg);color:var(--fg);font:inherit;min-width:0}
+.fpanel .fp-f{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.fpanel .fp-f button{width:auto;flex:none}
+.pop.fpanel.sheet{left:0!important;right:0;bottom:0;top:auto!important;width:auto;border-radius:16px 16px 0 0;max-height:85vh;padding-bottom:env(safe-area-inset-bottom,0px)}
+.pop.fpanel.sheet .fopt{padding:11px 10px}
 .scrim{position:fixed;inset:0;z-index:50;background:rgb(10 12 20 / .38);display:grid;place-items:center;padding:16px}
 .modal{width:min(620px,100%);max-height:100%;background:var(--panel);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
 .modal header{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
@@ -824,6 +845,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir carpetas"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <h1 id="listTitle">Bandeja inteligente</h1><button class="ttl" id="ttl"><b id="ttlMain">Bandeja</b><small id="ttlSub">Elementos no leídos</small></button>
         <button class="icon-btn" id="searchBtn" aria-label="Buscar" title="Buscar (/)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+        <button class="icon-btn fbtn" id="filterBtn" aria-label="Filtrar y ordenar" title="Filtrar y ordenar"><svg class="i" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v6l-4-2v-4z"/></svg><i class="fdot" hidden></i></button>
         <a class="icon-btn" id="calBtn" href="https://calendar.google.com/" target="_blank" rel="noopener" aria-label="Calendario" title="Calendario"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><rect x="8" y="13" width="3" height="3" rx=".5" style="fill:currentColor"/></svg></a>
         <button class="icon-btn" id="refreshBtn" aria-label="Actualizar" title="Actualizar" hidden><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></button>
         <button class="icon-btn" id="settingsBtn" aria-label="Ajustes" title="Firma y plantillas"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
@@ -1088,16 +1110,118 @@ function suggestProjects(){
 function chipsHTML(m){const p=projOf(m),c=[];if(m.important&&m.cat==='people')c.push('<span class="chip">Importantes</span>');if(p)c.push(`<span class="pchip" style="--pc:${p.color}">${esc(p.name)}</span>`);return c.length?`<div class="chips">${c.join('')}</div>`:''}
 
 /* ---------- Búsqueda con filtros ---------- */
-const FILTERS=[['unread','Sin leer','is:unread'],['att','Con adjuntos','has:attachment'],['week','Esta semana','newer_than:7d'],['imp','Importantes','is:important']];
+const FILTERS=[['unread','Sin leer','is:unread'],['flag','Destacados','is:starred'],['tome','Para mí','to:me'],['att','Con adjuntos','has:attachment'],['imp','Importantes','is:important']];
+// Filtro por fecha (como en Outlook): hoy, esta semana, este mes o un rango propio.
+const DATES=[['','Cualquier fecha'],['today','Hoy'],['week','Esta semana'],['month','Este mes'],['custom','Personalizado…']];
+const ymd=t=>{const d=new Date(t);return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')};
+const dayStart=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+function dateRange(f){ // [desde, hasta) en ms, o null
+  const n=Date.now();
+  if(f.date==='today')return [dayStart(n),Infinity];
+  if(f.date==='week')return [dayStart(n-6*D),Infinity];
+  if(f.date==='month')return [dayStart(n-29*D),Infinity];
+  if(f.date==='custom'){const a=f.after?new Date(f.after+'T00:00:00').getTime():0,b=f.before?new Date(f.before+'T00:00:00').getTime()+D:Infinity;return [a||0,b||Infinity]}
+  return null;
+}
+const dateLabel=f=>f.date==='custom'?[f.after&&'desde '+new Date(f.after+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}),f.before&&'hasta '+new Date(f.before+'T12:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})].filter(Boolean).join(' ')||'Fecha':(DATES.find(x=>x[0]===f.date)||['',''])[1];
 const searchActive=()=>!!(S.q||Object.keys(S.filters).some(k=>S.filters[k]));
-function buildQuery(){const f=S.filters,q=[S.q];FILTERS.forEach(([k,,g])=>{if(f[k])q.push(g)});if(f.from)q.push('from:'+f.from);
+const qv=v=>/\s/.test(v)?'"'+String(v).replace(/"/g,'')+'"':v;
+function buildQuery(){const f=S.filters,q=[S.q];FILTERS.forEach(([k,,g])=>{if(f[k])q.push(g)});if(f.from)q.push('from:'+qv(f.from));
+  const r=dateRange(f);if(r){if(r[0])q.push('after:'+ymd(r[0]));if(r[1]!==Infinity)q.push('before:'+ymd(r[1]))}
+  if(S.folder==='sent')q.push('in:sent');else if(S.folder==='trash')q.push('in:trash');
   if(f.proj){const p=(PREF.projects||[]).find(x=>x.name===f.proj);if(p)q.push(projQuery(p))}return q.filter(Boolean).join(' ')||'in:inbox'}
 function matchLocal(m){const f=S.filters;
   if(S.q){const q=norm(S.q);if(!norm([m.from.name,m.from.email,m.subject,preview(m),m.to?m.to.name:''].join(' ')).includes(q))return false}
-  if(f.unread&&!m.unread)return false;if(f.att&&!(m.attach||m.hasAtt))return false;if(f.week&&time(m)<Date.now()-7*D)return false;
-  if(f.imp&&!m.important)return false;if(f.from&&senderOf(m)!==f.from)return false;if(f.proj&&(projOf(m)||{}).name!==f.proj)return false;return true}
+  if(f.unread&&!m.unread)return false;if(f.att&&!(m.attach||m.hasAtt))return false;if(f.flag&&!m.pinned)return false;if(f.tome&&(m.sent||m.newSender&&m.cat!=='people'))return false;
+  const r=dateRange(f);if(r&&(time(m)<r[0]||time(m)>=r[1]))return false;
+  if(f.imp&&!m.important)return false;if(f.from&&!norm([m.from.name,m.from.email,m.to&&m.to.name,m.to&&m.to.email].join(' ')).includes(norm(f.from)))return false;if(f.proj&&(projOf(m)||{}).name!==f.proj)return false;return true}
 function filterBar(){const f=S.filters,ch=(k,l,on)=>`<button class="fchip ${on?'on':''}" data-filter="${esc(k)}" aria-pressed="${!!on}">${l}</button>`;
-  return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')}
+  if(!searchActive()&&!$('.list-head').classList.contains('searching'))return sortOn()?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'';
+  return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(f.date?`<button class="fchip on" data-filter="date">${esc(dateLabel(f))} ✕</button>`:'')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')+(sortOn()?`<button class="fchip on" data-filter="sort">${esc(sortLabel())} ✕</button>`:'')}
+
+/* ---------- Ordenar (como en Outlook): fecha, nombre, asunto o importancia ---------- */
+const SORTS=[['date','Fecha'],['from','De (nombre)'],['subject','Asunto'],['imp','Importancia']];
+const sortCfg=()=>Object.assign({by:'date',dir:'desc'},PREF.sort||{});
+const sortOn=()=>{const c=sortCfg();return c.by!=='date'||c.dir!=='desc'};
+const dirLabels=by=>by==='from'||by==='subject'?['A → Z','Z → A']:by==='imp'?['Importantes primero','Importantes al final']:['Más recientes arriba','Más antiguos arriba'];
+const sortLabel=()=>{const c=sortCfg(),l=dirLabels(c.by);return 'Orden: '+SORTS.find(x=>x[0]===c.by)[1]+' · '+(c.by==='date'?(c.dir==='desc'?l[0]:l[1]):c.by==='imp'?(c.dir==='desc'?l[0]:l[1]):(c.dir==='asc'?l[0]:l[1]))};
+const rowName=m=>{const p=m.sent?m.to:m.from;return String(p&&(p.name||p.email)||'').trim()};
+const subjKey=m=>String(m.subject||'').replace(/^\s*((re|rv|fw|fwd|reenv)\s*:\s*)+/i,'').trim();
+function sortItems(l){
+  const c=sortCfg();if(!sortOn())return l;
+  const col=new Intl.Collator('es',{sensitivity:'base'}),k=c.dir==='asc'?1:-1;
+  const f={date:(a,b)=>time(a)-time(b),from:(a,b)=>col.compare(rowName(a),rowName(b))||time(b)-time(a)*1,subject:(a,b)=>col.compare(subjKey(a),subjKey(b))||time(b)-time(a),
+    imp:(a,b)=>((isPrio(a)||a.important?1:0)-(isPrio(b)||b.important?1:0))||(time(a)-time(b))}[c.by];
+  return l.slice().sort(c.by==='from'||c.by==='subject'?(a,b)=>k*col.compare(c.by==='from'?rowName(a):subjKey(a),c.by==='from'?rowName(b):subjKey(b))||time(b)-time(a):(a,b)=>k*f(a,b));
+}
+// Filas con encabezados por grupo: por nombre (como "Organizar por: De" de Outlook) o por letra del asunto.
+function sortedRows(items,sec){
+  const c=sortCfg();items=sortItems(items);
+  if(c.by!=='from'&&c.by!=='subject')return items.map(m=>rowHTML(m,sec)).join('');
+  let h='',last=null;
+  items.forEach(m=>{const g=c.by==='from'?rowName(m)||'(sin nombre)':((subjKey(m)[0]||'#').toUpperCase());if(norm(g)!==last){last=norm(g);h+=`<div class="dayh">${esc(g)}</div>`}h+=rowHTML(m,sec)});
+  return h;
+}
+
+/* ---------- Panel "Filtrar" ---------- */
+function knownNames(){
+  const pool=S.mode==='demo'?mails:Object.values(G.map),seen=new Map();
+  pool.forEach(m=>{[m.from,m.to].forEach(p=>{if(p&&p.email&&!p.me){const k=p.email.toLowerCase();if(!seen.has(k))seen.set(k,p.name||p.email)}})});
+  return [...seen.values()].sort(new Intl.Collator('es').compare).slice(0,300);
+}
+function openFilterPanel(){
+  closePop();
+  const f=S.filters,c=sortCfg();
+  const p=document.createElement('div');p.className='pop fpanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','Filtrar y ordenar');
+  const chk=(k,l)=>`<button type="button" class="fopt ${f[k]?'on':''}" data-fk="${k}" aria-pressed="${!!f[k]}"><span class="ck">${ic.check}</span><span>${esc(l)}</span></button>`;
+  const rad=(name,v,l,on)=>`<button type="button" class="fopt ${on?'on':''}" data-${name}="${v}" aria-pressed="${on}"><span class="ck">${ic.check}</span><span>${esc(l)}</span></button>`;
+  const draw=()=>{const dl=dirLabels(c.by),asc=c.by==='from'||c.by==='subject';
+    p.innerHTML=`<div class="fp-h"><b>Filtrar</b><button type="button" class="icon-btn" data-fpx aria-label="Cerrar">${ic.x}</button></div>
+    <div class="fp-b">
+      <button type="button" class="fopt ${FILTERS.some(([k])=>f[k])?'':'on'}" data-fall><span class="ck">${ic.check}</span><span>Todos</span></button>
+      ${FILTERS.map(([k,l])=>chk(k,l)).join('')}
+      <h3>De</h3>
+      <label class="fp-in">${ic.person}<input id="fpFrom" list="fpNames" placeholder="Nombre o correo" value="${esc(f.from||'')}" autocomplete="off"></label>
+      <datalist id="fpNames">${knownNames().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+      <h3>Fecha</h3>
+      ${DATES.map(([v,l])=>rad('fdate',v,l,(f.date||'')===v)).join('')}
+      <div class="fp-range" ${f.date==='custom'?'':'hidden'}><label>Desde<input type="date" id="fpAfter" value="${esc(f.after||'')}"></label><label>Hasta<input type="date" id="fpBefore" value="${esc(f.before||'')}"></label></div>
+      <h3>Ordenar por</h3>
+      ${SORTS.map(([v,l])=>rad('fsort',v,l,c.by===v)).join('')}
+      <h3>Orden</h3>
+      ${rad('fdir',asc?'asc':'desc',dl[0],asc?c.dir==='asc':c.dir==='desc')}${rad('fdir',asc?'desc':'asc',dl[1],asc?c.dir==='desc':c.dir==='asc')}
+    </div>
+    <div class="fp-f"><button type="button" class="ghost" data-fpclear>Borrar filtros</button><button type="button" class="send" data-fpok>Aplicar</button></div>`};
+  draw();document.body.appendChild(p);
+  const place=()=>{if(isMob()){p.classList.add('sheet');return}const a=$('#filterBtn').getBoundingClientRect();p.style.left=Math.max(12,Math.min(a.left,window.innerWidth-p.offsetWidth-12))+'px';p.style.top=Math.min(a.bottom+6,window.innerHeight-p.offsetHeight-12)+'px'};
+  place();
+  const keepFrom=()=>{const i=p.querySelector('#fpFrom');if(i)f.from=i.value.trim();const a=p.querySelector('#fpAfter'),b=p.querySelector('#fpBefore');if(a)f.after=a.value;if(b)f.before=b.value};
+  p.addEventListener('click',e=>{
+    e.stopPropagation();
+    const t=e.target.closest('button');if(!t)return;keepFrom();
+    if(t.hasAttribute('data-fpx')){closePop();return}
+    if(t.dataset.fk){f[t.dataset.fk]=!f[t.dataset.fk]}
+    else if(t.hasAttribute('data-fall')){FILTERS.forEach(([k])=>delete f[k])}
+    else if(t.dataset.fdate!==undefined){f.date=t.dataset.fdate;if(f.date!=='custom'){delete f.after;delete f.before}}
+    else if(t.dataset.fsort){c.by=t.dataset.fsort;c.dir=c.by==='from'||c.by==='subject'?'asc':'desc'}
+    else if(t.dataset.fdir){c.dir=t.dataset.fdir}
+    else if(t.hasAttribute('data-fpclear')){S.filters={};PREF.sort=null;savePrefs();closePop();applyFilters();return}
+    else if(t.hasAttribute('data-fpok')){applyFilters(c);closePop();return}
+    draw();place();
+  });
+  p.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='fpFrom'){e.preventDefault();keepFrom();applyFilters(c);closePop()}});
+  setTimeout(()=>{const i=p.querySelector('#fpFrom');if(i&&!isMob())i.focus()},30);
+}
+function applyFilters(c){
+  if(c){PREF.sort=c.by==='date'&&c.dir==='desc'?null:{by:c.by,dir:c.dir};savePrefs()}
+  const f=S.filters;Object.keys(f).forEach(k=>{if(!f[k])delete f[k]});if(f.date!=='custom'){delete f.after;delete f.before}
+  if(f.date==='custom'&&!f.after&&!f.before)delete f.date;
+  const any=FILTERS.some(([k])=>f[k])||f.from||f.date||f.proj;
+  $('.list-head').classList.toggle('searching',!!(any||S.q));
+  if(any&&!['smart','sent','trash'].includes(S.folder)){S.folder='smart';renderNav()}
+  S.section=null;
+  if(any||S.q)runSearch();else renderList();
+}
 
 /* ---------- Personas como Spark: por la dirección tuya que recibió el correo ---------- */
 let MYADDR=[];
@@ -1354,7 +1478,7 @@ function rowHTML(m,sec){
 const skeleton=t=>`<div class="loading">${'<div class="sk"></div>'.repeat(6)}<small>${t}</small></div>`;
 function card(id,label,items){
   visible.push(...items);
-  return `<section class="sec card ${id}">${label?`<div class="sec-h"><span>${label}</span></div>`:''}${items.map(m=>rowHTML(m,id)).join('')}</section>`;
+  return `<section class="sec card ${id}">${label?`<div class="sec-h"><span>${label}</span></div>`:''}${sortedRows(items,id)}</section>`;
 }
 const stackAv=l=>l.length?`<span class="stack">${l.map(m=>{const p=m.sent?m.to:(m.first&&m.first.email?m.first:m.from);return `<span class="mini" style="background:${avColor(p)}">${esc(((p&&p.name||'?').trim()[0]||'?').toUpperCase())}</span>`}).join('')}</span>`:'';
 function dayLabel(t){
@@ -1364,9 +1488,9 @@ function dayLabel(t){
   return d.toLocaleDateString('es-CL',{day:'numeric',month:'long',...(d.getFullYear()!==n.getFullYear()?{year:'numeric'}:{})});
 }
 function feedList(){
-  const items=secItems('feed'),st=S.mode==='gmail'?G.secs.feed:null;visible.push(...items);
+  const items=sortItems(secItems('feed')),st=S.mode==='gmail'?G.secs.feed:null;visible.push(...items);
   let h='',last='';
-  items.forEach(m=>{const l=dayLabel(time(m));if(l!==last){h+=`<div class="dayh">${esc(l)}</div>`;last=l}h+=rowHTML(m,'feed')});
+  if(sortOn())h=sortedRows(items,'feed');else items.forEach(m=>{const l=dayLabel(time(m));if(l!==last){h+=`<div class="dayh">${esc(l)}</div>`;last=l}h+=rowHTML(m,'feed')});
   if(st&&st.loading)h+=skeleton('Cargando…');else if(st&&st.token)h+=`<button class="showall" data-loadmore="feed">Cargar más</button>`;
   return h?`<section class="sec feed">${h}</section>`:'';
 }
@@ -1385,10 +1509,10 @@ function secCard(sec){
     ${count>shown.length&&sec.id!=='people'?`<button class="showall" data-section="${sec.id}">${stackAv(items.slice(shown.length,shown.length+3))}Mostrar todo (${count})</button>`:''}</section>`;
 }
 function fullList(id,label){
-  const items=secItems(id);visible.push(...items);
+  const items=sortItems(secItems(id));visible.push(...items);
   const st=S.mode==='gmail'?G.secs[id]:null;
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
-  h+=items.length?`<section class="sec card full ${id}">${id==='people'?groupRows(items,'people',0).html:items.map(m=>rowHTML(m,id)).join('')}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
+  h+=items.length?`<section class="sec card full ${id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
   if(st&&st.loading)h+=skeleton('Cargando correos…');
   else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
   return h;
@@ -1433,7 +1557,8 @@ function renderList(){
   const srch=mailFolder&&searchActive();
   $('#listTitle').textContent=srch?'Resultados':f.label;
   const isInbox=S.folder==='smart'&&!srch;
-  $('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch)?filterBar():'';
+  $('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch||sortOn())?filterBar():'';
+  $('#filterBtn').classList.toggle('on',srch&&Object.keys(S.filters).some(k=>S.filters[k])||sortOn());$('#filterBtn').hidden=!mailFolder;
   $('#ttl').classList.toggle('plain',!isInbox);
   $('#ttlMain').textContent=isInbox?(isMob()?'Bandeja':'Bandeja de entrada'):(srch?'Resultados':f.label);
   $('#ttlSub').textContent=isInbox?({goals:'Lista de objetivos',unread:isMob()?'Elementos no leídos':'Tarjetas no leídas',simple:'Lista simple'}[PREF.inboxType||'unread']):'';
@@ -2153,6 +2278,7 @@ $('#q').addEventListener('input',e=>{
 });
 $('#composeBtn').onclick=()=>openCompose();$('#composeBtn2').onclick=()=>openCompose();$('#fab').onclick=()=>openCompose();
 $('#settingsBtn').onclick=openSettings;
+$('#filterBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fpanel'))closePop();else openFilterPanel()};
 let _mob=isMob();window.addEventListener('resize',()=>{if(isMob()!==_mob){_mob=isMob();renderAll()}});
 $('#railMore').onclick=e=>{e.stopPropagation();$('#app').classList.toggle('drawer')};
 $('#sideSettings').onclick=()=>{$('#app').classList.remove('drawer');openSettings()};
@@ -2314,7 +2440,7 @@ $('#ttl').onclick=openPicker;
 $('#searchBtn').onclick=()=>{const h=$('.list-head');const on=!h.classList.contains('searching');h.classList.toggle('searching',on);if(on){if(!['smart','pinned','sent','done','trash','snoozed'].includes(S.folder))goFolder('smart');$('#q').focus();renderList()}else{$('#q').value='';S.q='';S.filters={};renderList()}};
 $('#fbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter],[data-fproj]');if(!b)return;
   if(b.dataset.fproj!==undefined){S.filters.proj=S.filters.proj===b.dataset.fproj?'':b.dataset.fproj}
-  else{const k=b.dataset.filter;if(k==='from')delete S.filters.from;else S.filters[k]=!S.filters[k]}
+  else{const k=b.dataset.filter;if(k==='sort'){PREF.sort=null;savePrefs();renderList();return}if(k==='from')delete S.filters.from;else if(k==='date'){delete S.filters.date;delete S.filters.after;delete S.filters.before}else S.filters[k]=!S.filters[k]}
   S.section=null;runSearch()});
 $('#aiFab2').onclick=()=>openAI();$('#fab2').onclick=()=>openCompose();
 
