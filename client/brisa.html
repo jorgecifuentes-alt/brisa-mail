@@ -187,6 +187,7 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .nmbox input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;color:var(--fg);outline:0;min-width:0}
 .fbar:has(.nmbox){flex-wrap:wrap}
 .thumb.az span{font:700 9px var(--f-ui);color:var(--faint);line-height:1;margin:1px 0 0 2px}
+.nbtn.on{color:#fff;background:var(--accent,#0B57D0);border-radius:10px}
 .fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
 .pop.fpanel{width:300px;padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
 .fpanel .fp-h{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 4px 16px}
@@ -902,6 +903,7 @@ body{-webkit-font-smoothing:antialiased}
         <button class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir carpetas"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <h1 id="listTitle">Bandeja inteligente</h1><button class="ttl" id="ttl"><b id="ttlMain">Bandeja</b><small id="ttlSub">Elementos no leídos</small></button>
         <button class="icon-btn" id="searchBtn" aria-label="Buscar" title="Buscar (/)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+        <button class="icon-btn nbtn" id="namesBtn" aria-label="Solo nombres (A-Z)" title="Solo nombres, de la A a la Z" aria-pressed="false"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 10l2.5-6 2.5 6M4.3 8h3.4M3.5 14h5l-5 6h5"/><path d="M13 6h8M13 12h8M13 18h8"/></svg></button>
         <button class="icon-btn fbtn" id="filterBtn" aria-label="Filtrar y ordenar" title="Filtrar y ordenar"><svg class="i" viewBox="0 0 24 24"><path d="M4 5h16l-6 8v6l-4-2v-4z"/></svg><i class="fdot" hidden></i></button>
         <a class="icon-btn" id="calBtn" href="https://calendar.google.com/" target="_blank" rel="noopener" aria-label="Calendario" title="Calendario"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><rect x="8" y="13" width="3" height="3" rx=".5" style="fill:currentColor"/></svg></a>
         <button class="icon-btn" id="refreshBtn" aria-label="Actualizar" title="Actualizar" hidden><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg></button>
@@ -1637,6 +1639,7 @@ function renderList(){
   $('#listTitle').textContent=srch?'Resultados':f.label;
   const isInbox=S.folder==='smart'&&!srch;
   if(document.activeElement?.id!=='nameQ')$('#fbar').innerHTML=mailFolder&&($('.list-head').classList.contains('searching')||srch||sortOn())?filterBar():'';
+  {const nb=$('#namesBtn'),non=namesMode()&&!!PREF.namesCollapsed&&isInbox;nb.classList.toggle('on',non);nb.setAttribute('aria-pressed',non);nb.hidden=!mailFolder}
   $('#filterBtn').classList.toggle('on',srch&&Object.keys(S.filters).some(k=>S.filters[k])||sortOn()&&!(namesMode()&&!PREF.sort));$('#filterBtn').hidden=!mailFolder;
   $('#ttl').classList.toggle('plain',!isInbox);
   $('#ttlMain').textContent=isInbox?(isPhone()?'Bandeja':'Bandeja de entrada'):(srch?'Resultados':f.label);
@@ -2364,6 +2367,15 @@ $('#fbar').addEventListener('click',e=>{if(!e.target.closest('[data-ncollapse]')
 $('#list').addEventListener('click',e=>{const b=e.target.closest('[data-nexp]');if(!b)return;S.openName=S.openName||{};S.openName[b.dataset.nexp]=!S.openName[b.dataset.nexp];renderList()});
 $('#fbar').addEventListener('input',e=>{if(e.target.id!=='nameQ')return;S.nameQ=e.target.value.trim();renderList()});
 $('#list').addEventListener('click',e=>{if(!e.target.closest('[data-namesearch]'))return;S.filters={from:S.nameQ};S.nameQ='';$('.list-head').classList.add('searching');runSearch()});
+// Un toque: bandeja "Por nombre" contraída (solo nombres A-Z). Otro toque: vuelve a la bandeja de antes.
+$('#namesBtn').onclick=()=>{
+  const on=namesMode()&&PREF.namesCollapsed;
+  if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
+  else{if(!namesMode())PREF.prevInboxType=PREF.inboxType||'unread';PREF.inboxType='names';PREF.namesCollapsed=true;PREF.sort=null}
+  S.nameQ='';S.openName={};S.section=null;savePrefs();
+  if(S.folder!=='smart'||searchActive()){S.q='';$('#q').value='';S.filters={};$('.list-head').classList.remove('searching');S.folder='smart';renderNav()}
+  if(S.mode==='gmail')loadSmart();else renderList();
+};
 $('#filterBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.fpanel'))closePop();else openFilterPanel()};
 let _mob=isMob();window.addEventListener('resize',()=>{if(isMob()!==_mob){_mob=isMob();renderAll()}});
 $('#railMore').onclick=e=>{e.stopPropagation();$('#app').classList.toggle('drawer')};
