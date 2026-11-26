@@ -197,7 +197,9 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .gh.closed svg{transform:none}
 .ttl small,.ttl b{white-space:nowrap}
 .ttl{min-width:0;overflow:hidden}
-.gall{display:flex;justify-content:flex-end;padding:8px 12px 0}
+.gall{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px 4px 18px}
+.gsum{font-size:13px;color:var(--muted)}.gsum b{color:var(--accent,#0B57D0);font-weight:600}
+.nun{font-style:normal;flex:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent,#0B57D0);color:#fff;font:600 12px/20px var(--f-ui);text-align:center}
 .gall .ghost{font-size:13px;padding:4px 10px}
 .nbtn.on{color:#fff;background:var(--accent,#0B57D0);border-radius:10px}
 .fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
@@ -1238,9 +1240,10 @@ function sortedRows(items,sec){
     const groups=[];let cur=null;
     items.forEach(m=>{const g=rowName(m)||'(sin nombre)',k=norm(g);if(!cur||cur.k!==k){cur={k,g,list:[]};groups.push(cur)}cur.list.push(m)});
     const allC=!!PREF.groupsCollapsed;S.gToggle=S.gToggle||{};
-    let h=`<div class="gall"><button class="ghost" data-gall>${allC?'Expandir todo':'Contraer todo'}</button></div>`;
+    const tun=items.filter(m=>m.unread).length;
+    let h=`<div class="gall"><span class="gsum">${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span><button class="ghost" data-gall>${allC?'Expandir todo':'Contraer todo'}</button></div>`;
     groups.forEach(gr=>{const closed=allC!==!!S.gToggle[gr.k],un=gr.list.filter(m=>m.unread).length;
-      h+=`<button class="gh ${closed?'closed':''} ${un?'unread':''}" data-gcol="${esc(gr.k)}" aria-expanded="${!closed}"><span>${esc(gr.g)}</span><small>${gr.list.length}</small>${ic.chevR}</button>`;
+      h+=`<button class="gh ${closed?'closed':''} ${un?'unread':''}" data-gcol="${esc(gr.k)}" aria-expanded="${!closed}"><span>${esc(gr.g)}</span>${un?`<em class="nun" title="${un} sin leer">${un}</em>`:''}<small title="${gr.list.length} en total">${gr.list.length}</small>${ic.chevR}</button>`;
       if(!closed)h+=gr.list.map(m=>rowHTML(m,sec)).join('')});
     return h;
   }
@@ -1605,10 +1608,11 @@ function fullList(id,label){
     const desc=PREF.sort&&PREF.sort.by==='from'&&PREF.sort.dir==='desc';
     const groups=[...by.entries()].sort((a,b)=>(desc?-1:1)*col.compare(a[1].name,b[1].name));
     S.openName=S.openName||{};
-    let h=`<section class="sec card full names">`,letter='';
+    const tun=items.filter(m=>m.unread).length;
+    let h=`<div class="gall"><span class="gsum">${groups.length} ${groups.length===1?'persona':'personas'}${tun?` · <b>${tun} sin leer</b>`:''}</span></div><section class="sec card full names">`,letter='';
     groups.forEach(([k,g])=>{const L=(g.name[0]||'#').toUpperCase();if(L!==letter){letter=L;h+=`<div class="dayh">${esc(L)}</div>`}
       const un=g.list.filter(m=>m.unread).length,open=!!S.openName[k];
-      h+=`<button class="nrow ${un?'unread':''} ${open?'open':''}" data-nexp="${esc(k)}" aria-expanded="${open}">${un?'<i class="udot"></i>':''}${avatar(g.p||{name:g.name})}<b>${esc(g.name)}</b><span class="ncnt">${g.list.length}</span>${ic.chevR}</button>`;
+      h+=`<button class="nrow ${un?'unread':''} ${open?'open':''}" data-nexp="${esc(k)}" aria-expanded="${open}">${un?'<i class="udot"></i>':''}${avatar(g.p||{name:g.name})}<b>${esc(g.name)}</b>${un?`<em class="nun" title="${un} sin leer">${un}</em>`:''}<span class="ncnt" title="${g.list.length} en total">${g.list.length}</span>${ic.chevR}</button>`;
       if(open)h+=g.list.map(m=>rowHTML(m,id)).join('')});
     h+='</section>';
     if(st&&st.loading)h+=skeleton('Cargando correos…');else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
