@@ -13,7 +13,7 @@ const swaps = [
   ['No se pudo cargar Gmail', 'No se pudo cargar el correo'],
   ['Cargando tu bandeja de Gmail…', 'Cargando tu bandeja…'],
   ['Buscando en Gmail…', 'Buscando…'],
-  ['Tu sesión de Gmail venció. Reconéctala en claude.ai › Configuración › Conectores.', 'El servidor rechazó el usuario o la contraseña. Revisa IMAP_USER e IMAP_PASS en .env.local.'],
+  ['Tu sesión de Gmail venció. Reconéctala en claude.ai › Configuración › Conectores.', 'Tu proveedor de correo rechazó el usuario o la contraseña. Revisa IMAP_USER e IMAP_PASS en la configuración del servidor (en Railway: Variables). En Gmail se usa una contraseña de aplicación de 16 letras, sin espacios.'],
   ['Gmail no respondió. Intenta de nuevo en un momento.', 'No se pudo conectar con el servidor de correo. Revisa IMAP_HOST y tu conexión.'],
   ['Gmail rechazó la acción.', 'El servidor de correo rechazó la acción.'],
   ['No se pudo completar la acción en Gmail.', 'No se pudo completar la acción en el servidor de correo.'],

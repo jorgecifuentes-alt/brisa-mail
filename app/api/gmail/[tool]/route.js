@@ -16,7 +16,7 @@ export async function POST(req, { params }) {
     const auth = /auth|login|credential/i.test(String(e?.responseText || e?.message || ''));
     const code = e?.code === 'tool_error' ? 'tool_error' : auth ? 'needs_reauth' : 'server_unavailable';
     const message = code === 'tool_error' ? e.message
-      : auth ? 'El servidor de correo rechazó el usuario o la contraseña. Revisa IMAP_USER e IMAP_PASS.'
+      : auth ? 'Tu proveedor de correo rechazó el usuario o la contraseña. Revisa IMAP_USER e IMAP_PASS.'
       : 'No se pudo conectar con el servidor de correo.';
     console.error(`[gmail/${params.tool}]`, e?.message || e);
     return Response.json({ error: { code, message } }, { status: code === 'tool_error' ? 422 : 502 });
