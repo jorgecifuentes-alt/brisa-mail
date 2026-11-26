@@ -1205,7 +1205,7 @@ function openFilterPanel(){
     else if(t.dataset.fdate!==undefined){f.date=t.dataset.fdate;if(f.date!=='custom'){delete f.after;delete f.before}}
     else if(t.dataset.fsort){c.by=t.dataset.fsort;c.dir=c.by==='from'||c.by==='subject'?'asc':'desc'}
     else if(t.dataset.fdir){c.dir=t.dataset.fdir}
-    else if(t.hasAttribute('data-fpclear')){S.filters={};PREF.sort=null;savePrefs();closePop();applyFilters();return}
+    else if(t.hasAttribute('data-fpclear')){const was=sortOn();S.filters={};PREF.sort=null;savePrefs();closePop();applyFilters();if(was&&S.mode==='gmail')loadSmart();return}
     else if(t.hasAttribute('data-fpok')){applyFilters(c);closePop();return}
     draw();place();
   });
@@ -1213,7 +1213,7 @@ function openFilterPanel(){
   setTimeout(()=>{const i=p.querySelector('#fpFrom');if(i&&!isMob())i.focus()},30);
 }
 function applyFilters(c){
-  if(c){PREF.sort=c.by==='date'&&c.dir==='desc'?null:{by:c.by,dir:c.dir};savePrefs()}
+  if(c){const was=sortOn();PREF.sort=c.by==='date'&&c.dir==='desc'?null:{by:c.by,dir:c.dir};savePrefs();if(was!==sortOn()&&S.mode==='gmail')loadSmart()}
   const f=S.filters;Object.keys(f).forEach(k=>{if(!f[k])delete f[k]});if(f.date!=='custom'){delete f.after;delete f.before}
   if(f.date==='custom'&&!f.after&&!f.before)delete f.date;
   const any=FILTERS.some(([k])=>f[k])||f.from||f.date||f.proj;
@@ -1331,7 +1331,7 @@ async function loadSec(id,o={}){
 async function loadSmart(force){
   if(!caps.mcp)return;
   if(force){try{await caps.mcp.invalidate('Gmail')}catch(e){}}
-  const simple=(PREF.inboxType||'unread')==='simple';
+  const simple=(PREF.inboxType||'unread')==='simple'||sortOn();
   const ids=simple?['all']:activeSecs().map(x=>x.id).concat(feedOn()?['feed']:[]);
   G.loading.smart=true;G.err.smart=null;renderList();
   await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id||id==='feed'?25:(id==='people'?25:(id==='prio'&&feedOn()?8:6))),force})));
@@ -1512,7 +1512,7 @@ function fullList(id,label){
   const items=sortItems(secItems(id));visible.push(...items);
   const st=S.mode==='gmail'?G.secs[id]:null;
   let h=label?`<div class="sec-back"><button class="icon-btn" data-secback aria-label="Volver a la bandeja">${ic.back}</button><b>${label}</b><span>${secCount(id)}</span></div>`:'';
-  h+=items.length?`<section class="sec card full ${id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
+  h+=items.length?`<section class="sec card full ${id==='search'?'results':id}">${id==='people'&&!sortOn()?groupRows(items,'people',0).html:sortedRows(items,id)}</section>`:(st&&st.loading?'':`<div class="empty"><b>Nada por aquí</b>No hay correos en esta sección.</div>`);
   if(st&&st.loading)h+=skeleton('Cargando correos…');
   else if(st&&st.token)h+=`<button class="showall" data-loadmore="${id}">Cargar más</button>`;
   return h;
@@ -1586,7 +1586,10 @@ function renderList(){
   }
   if(S.mode==='gmail'&&G.err.smart&&!Object.values(G.secs).some(x=>x.ids.length)){L.innerHTML=errBox(G.err.smart,'folder');return}
   const type=PREF.inboxType||'unread';
-  if(type==='simple'){html+=fullList('all','');L.innerHTML=html;return}
+  // Ordenada por nombre, asunto o importancia: toda la bandeja en una sola lista (como Outlook).
+  if(type==='simple'||sortOn()){
+    if(S.mode==='gmail'&&!G.secs.all){G.secs.all={ids:[],count:0,token:null,loading:false};setTimeout(()=>loadSec('all',{size:30}),0);html+=skeleton('Cargando…');L.innerHTML=html;return}
+    html+=fullList('all','');L.innerHTML=html;return}
   if(S.section){const sec=SECS.find(x=>x.id===S.section);html+=fullList(S.section,sec?sec.label:'');L.innerHTML=html;return}
   const gate=S.mode==='demo'?mails.filter(m=>demoIn(m,'smart')&&m.newSender):[];
   if(gate.length){
@@ -2440,7 +2443,7 @@ $('#ttl').onclick=openPicker;
 $('#searchBtn').onclick=()=>{const h=$('.list-head');const on=!h.classList.contains('searching');h.classList.toggle('searching',on);if(on){if(!['smart','pinned','sent','done','trash','snoozed'].includes(S.folder))goFolder('smart');$('#q').focus();renderList()}else{$('#q').value='';S.q='';S.filters={};renderList()}};
 $('#fbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter],[data-fproj]');if(!b)return;
   if(b.dataset.fproj!==undefined){S.filters.proj=S.filters.proj===b.dataset.fproj?'':b.dataset.fproj}
-  else{const k=b.dataset.filter;if(k==='sort'){PREF.sort=null;savePrefs();renderList();return}if(k==='from')delete S.filters.from;else if(k==='date'){delete S.filters.date;delete S.filters.after;delete S.filters.before}else S.filters[k]=!S.filters[k]}
+  else{const k=b.dataset.filter;if(k==='sort'){PREF.sort=null;savePrefs();if(S.mode==='gmail')loadSmart();else renderList();return}if(k==='from')delete S.filters.from;else if(k==='date'){delete S.filters.date;delete S.filters.after;delete S.filters.before}else S.filters[k]=!S.filters[k]}
   S.section=null;runSearch()});
 $('#aiFab2').onclick=()=>openAI();$('#fab2').onclick=()=>openCompose();
 
