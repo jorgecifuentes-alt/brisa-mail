@@ -187,6 +187,18 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .nmbox input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;color:var(--fg);outline:0;min-width:0}
 .fbar:has(.nmbox){flex-wrap:wrap}
 .thumb.az span{font:700 9px var(--f-ui);color:var(--faint);line-height:1;margin:1px 0 0 2px}
+.gh{display:flex;align-items:center;gap:8px;width:100%;padding:14px 14px 6px 18px;text-align:left;color:var(--muted);font-size:14.5px;font-weight:500}
+.gh span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh.unread span{color:var(--fg);font-weight:600}
+.gh small{font-size:12.5px;color:var(--faint)}
+.gh svg{width:22px;height:22px;padding:3px;border-radius:6px;color:var(--muted);transform:rotate(90deg);transition:transform .15s;flex:none}
+.gh:hover svg{background:var(--sunk)}
+.gh.closed{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.gh.closed svg{transform:none}
+.ttl small,.ttl b{white-space:nowrap}
+.ttl{min-width:0;overflow:hidden}
+.gall{display:flex;justify-content:flex-end;padding:8px 12px 0}
+.gall .ghost{font-size:13px;padding:4px 10px}
 .nbtn.on{color:#fff;background:var(--accent,#0B57D0);border-radius:10px}
 .fbtn{position:relative}.fbtn.on{color:var(--accent,#0B57D0)}.fbtn.on::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#0B57D0)}.fbtn .fdot{display:none}
 .pop.fpanel{width:300px;padding:0;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
@@ -1221,8 +1233,19 @@ function sortItems(l){
 function sortedRows(items,sec){
   const c=sortCfg();items=sortItems(items);
   if(c.by!=='from'&&c.by!=='subject')return items.map(m=>rowHTML(m,sec)).join('');
+  if(c.by==='from'){
+    // Grupos por persona, cada uno con su botón para contraer (y "Contraer todo" arriba).
+    const groups=[];let cur=null;
+    items.forEach(m=>{const g=rowName(m)||'(sin nombre)',k=norm(g);if(!cur||cur.k!==k){cur={k,g,list:[]};groups.push(cur)}cur.list.push(m)});
+    const allC=!!PREF.groupsCollapsed;S.gToggle=S.gToggle||{};
+    let h=`<div class="gall"><button class="ghost" data-gall>${allC?'Expandir todo':'Contraer todo'}</button></div>`;
+    groups.forEach(gr=>{const closed=allC!==!!S.gToggle[gr.k],un=gr.list.filter(m=>m.unread).length;
+      h+=`<button class="gh ${closed?'closed':''} ${un?'unread':''}" data-gcol="${esc(gr.k)}" aria-expanded="${!closed}"><span>${esc(gr.g)}</span><small>${gr.list.length}</small>${ic.chevR}</button>`;
+      if(!closed)h+=gr.list.map(m=>rowHTML(m,sec)).join('')});
+    return h;
+  }
   let h='',last=null;
-  items.forEach(m=>{const g=c.by==='from'?rowName(m)||'(sin nombre)':((subjKey(m)[0]||'#').toUpperCase());if(norm(g)!==last){last=norm(g);h+=`<div class="dayh">${esc(g)}</div>`}h+=rowHTML(m,sec)});
+  items.forEach(m=>{const g=(subjKey(m)[0]||'#').toUpperCase();if(norm(g)!==last){last=norm(g);h+=`<div class="dayh">${esc(g)}</div>`}h+=rowHTML(m,sec)});
   return h;
 }
 
@@ -2368,6 +2391,10 @@ $('#list').addEventListener('click',e=>{const b=e.target.closest('[data-nexp]');
 $('#fbar').addEventListener('input',e=>{if(e.target.id!=='nameQ')return;S.nameQ=e.target.value.trim();renderList()});
 $('#list').addEventListener('click',e=>{if(!e.target.closest('[data-namesearch]'))return;S.filters={from:S.nameQ};S.nameQ='';$('.list-head').classList.add('searching');runSearch()});
 // Un toque: bandeja "Por nombre" contraída (solo nombres A-Z). Otro toque: vuelve a la bandeja de antes.
+$('#list').addEventListener('click',e=>{
+  const a=e.target.closest('[data-gall]');if(a){PREF.groupsCollapsed=!PREF.groupsCollapsed;S.gToggle={};savePrefs();renderList();return}
+  const g=e.target.closest('[data-gcol]');if(g){S.gToggle=S.gToggle||{};S.gToggle[g.dataset.gcol]=!S.gToggle[g.dataset.gcol];renderList()}
+});
 $('#namesBtn').onclick=()=>{
   const on=namesMode()&&PREF.namesCollapsed;
   if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
