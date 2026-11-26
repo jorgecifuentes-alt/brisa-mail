@@ -282,7 +282,9 @@
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
   const caps = { mcp, sample: Object.freeze(sample), dictation: makeDictation(), db, user, desktop };
-  window.claude = Object.freeze({ use: (name) => Promise.resolve(caps[name] || null) });
+  // La IA dentro de Brisa solo existe si el servidor tiene clave; si no, la interfaz ofrece "Pedir a Claude".
+  const aiReady = fetch('/api/ai/status').then((r) => r.json()).then((j) => !!j.enabled).catch(() => false);
+  window.claude = Object.freeze({ use: (name) => name === 'sample' ? aiReady.then((ok) => (ok ? caps.sample : null)) : Promise.resolve(caps[name] || null) });
   // Modo local: conectar directo al servidor de correo.
   try { if (!localStorage.getItem('brisa-mode')) localStorage.setItem('brisa-mode', 'gmail'); } catch (e) {}
 })();

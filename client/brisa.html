@@ -611,6 +611,7 @@ body{-webkit-font-smoothing:antialiased}
   .sec.notif .sec-h svg{color:var(--ok)}
   .sec.news .sec-h svg{color:#8A5CF6}
   .sec.pinned .sec-h svg{color:var(--bolt)}
+  .sec.seen .sec-h svg{color:var(--faint)}
   .sec-h button{width:30px;height:30px}.sec-h button svg{width:22px;height:22px;color:var(--faint)}
   .row{grid-template-columns:30px minmax(0,1fr);gap:12px;padding:8px 14px 8px 18px;background:transparent}
   .row .av{width:30px;height:30px;font-size:11.5px;margin-top:4px}
@@ -708,6 +709,14 @@ body{-webkit-font-smoothing:antialiased}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.ptr.spin svg{animation-duration:2.4s}}
 .list{overscroll-behavior-y:contain}
+/* Pedir a Claude */
+.ai-log.ho{justify-content:flex-start}
+.ho-intro{margin:0;color:var(--muted);font-size:14.5px;line-height:1.5}
+.ho-intro b{color:var(--fg)}
+.ho-btns{display:flex;gap:8px;justify-content:flex-end}
+.ho-btns button{display:inline-flex;align-items:center;gap:6px}
+.ho-btns svg{width:17px;height:17px}
+.ai-input textarea#aiInput{min-height:48px}
 </style>
 
 <div class="app" id="app">
@@ -797,6 +806,7 @@ const ic={
   thumbU:'<svg class="i" viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 012 2v4h5a2 2 0 012 2.3l-1.2 7A2 2 0 0116.8 20H7"/></svg>',
   thumbD:'<svg class="i" viewBox="0 0 24 24"><path d="M17 13V4h3v9zM17 13l-4 8a2 2 0 01-2-2v-4H6a2 2 0 01-2-2.3l1.2-7A2 2 0 017.2 4H17"/></svg>',
   menu:'<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+  eye:'<svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   more:'<svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
   monitor:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
   ext:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg>',
@@ -936,27 +946,29 @@ function listFor(f){
 const getMail=id=>S.mode==='demo'?mails.find(m=>m.id===id):G.map[id];
 /* ---------- Secciones de la bandeja inteligente ---------- */
 const isMob=()=>window.matchMedia('(max-width:760px)').matches;
-const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:'boltL'},{id:'people',label:'Personas',mlabel:'Personal',icon:'mailI',micon:'person'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'}];
+const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:'boltL'},{id:'people',label:'Personas',mlabel:'Personal',icon:'mailI',micon:'person'},{id:'notif',label:'Notificaciones',icon:'bell'},{id:'news',label:'Boletines',icon:'doc'},{id:'pinned',label:'Anclados',icon:'pin'},{id:'seen',label:'Vistos',icon:'eye'}];
+// "Vistos" junta lo ya leído de la bandeja; solo tiene sentido en "Elementos no leídos".
+const activeSecs=()=>SECS.filter(x=>x.id!=='seen'||(PREF.inboxType||'unread')==='unread');
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
 const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important)||(PREF.prioSenders||[]).includes(senderOf(m))));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
 function secQuery(id){
-  const u=(PREF.inboxType||'unread')==='unread'&&id!=='pinned'&&id!=='all'?' is:unread':'';
+  const u=(PREF.inboxType||'unread')==='unread'&&!['pinned','all','seen'].includes(id)?' is:unread':'';
   const ps=(PREF.prioSenders||[]).slice(0,20),fr=ps.length?'from:('+ps.join(' OR ')+')':'';
   const notP=' -is:important'+(fr?' -'+fr:'');
   return {prio:'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u,people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
-    pinned:'is:starred -in:trash'+notP,all:'in:inbox'}[id];
+    pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox'}[id];
 }
 function secItems(id){
   if(S.mode==='demo'){
     const t=PREF.inboxType||'unread';
-    let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
-    if(t==='unread'&&id!=='pinned'&&id!=='all')l=l.filter(m=>m.unread||m.id===S.sel);
+    let l=id==='pinned'?mails.filter(m=>m.pinned&&!m.trash&&!m.blocked&&!isPrio(m)):id==='seen'?mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&!m.unread&&!m.pinned&&m.id!==S.sel):mails.filter(m=>demoIn(m,'smart')&&!m.newSender&&(id==='all'||secOf(m)===id));
+    if(t==='unread'&&!['pinned','all','seen'].includes(id))l=l.filter(m=>m.unread||m.id===S.sel);
     return l.sort(byTime);
   }
   const st=G.secs[id];if(!st)return [];
-  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:m.inInbox!==false)&&(id==='prio'||id==='all'||!isPrio(m))).sort(byTime);
+  return st.ids.map(x=>G.map[x]).filter(m=>m&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:m.inInbox!==false)&&(id==='prio'||id==='all'||id==='seen'||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
 }
 function secCount(id){
   if(S.mode==='demo')return secItems(id).length;
@@ -1024,7 +1036,7 @@ async function loadSmart(force){
   if(!caps.mcp)return;
   if(force){try{await caps.mcp.invalidate('Gmail')}catch(e){}}
   const simple=(PREF.inboxType||'unread')==='simple';
-  const ids=simple?['all']:SECS.map(x=>x.id);
+  const ids=simple?['all']:activeSecs().map(x=>x.id);
   G.loading.smart=true;G.err.smart=null;renderList();
   await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:3),force})));
   const errs=ids.map(id=>G.secs[id]&&G.secs[id].err).filter(Boolean);
@@ -1172,7 +1184,7 @@ function secCard(sec){
   if(!items.length&&!(st&&st.loading&&!st.ids.length))return '';
   if(!items.length)return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span></div><div class="loading"><div class="sk"></div></div></section>`;
   const shown=items.slice(0,3);visible.push(...shown);
-  const clear=['people','notif','news'].includes(sec.id);
+  const clear=['people','notif','news','seen'].includes(sec.id);
   const lab=isMob()&&sec.mlabel?sec.mlabel:sec.label,icn=ic[isMob()&&sec.micon?sec.micon:sec.icon];
   return `<section class="sec card ${sec.id}"><div class="sec-h">${icn}<span>${lab}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
     ${shown.map(m=>rowHTML(m,sec.id)).join('')}
@@ -1231,7 +1243,7 @@ function renderList(){
     html+=(S.gateAll?gate:gate.slice(0,1)).map(m=>`<div class="gate-card" data-id="${esc(m.id)}">${avatar(m.from)}<div class="who"><b>${esc(m.from.name)}</b><span>${esc(m.from.email)}</span><small>${ic.mailI}${esc(m.subject)}</small></div>
       <button class="thumb yes" data-gate="ok" title="Aceptar remitente" aria-label="Aceptar a ${esc(m.from.name)}">${ic.thumbU}</button><button class="thumb no" data-gate="block" title="Bloquear remitente" aria-label="Bloquear a ${esc(m.from.name)}">${ic.thumbD}</button></div>`).join('');
   }
-  const cards=SECS.map(secCard).join('');
+  const cards=activeSecs().map(secCard).join('');
   html+=cards;
   if(!cards&&!gate.length)html+=S.mode==='gmail'&&G.loading.smart?skeleton('Cargando tu bandeja…'):`<div class="empty"><div class="zero">0</div><b>Bandeja al día</b>No queda nada pendiente. Lo pospuesto volverá cuando toque.</div>`;
   L.innerHTML=html;
@@ -1252,7 +1264,8 @@ function aiCards(key){
     ${mp.busy?'<div class="txt">Armando el mapa…</div>':mp.err?`<p class="hint">${esc(mp.err)}</p>`:`<div class="mind">${mindSVG(mp.data)}</div><div class="src-row" style="margin-top:8px"><button data-copyoutline>Copiar como esquema</button></div>`}</div>`;
   return h;
 }
-const aiBtns=()=>caps.sample&&!aiOff?`<button class="tb ai" data-ai="sum" title="Resumir con IA">${ic.spark}<span>Resumir</span></button><button class="tb ai" data-ai="map" title="Mapa mental con IA">${ic.tree}<span>Mapa mental</span></button>`:'';
+const aiLive=()=>!!caps.sample&&!aiOff;
+const aiBtns=()=>true?`<button class="tb ai" data-ai="sum" title="Resumir con IA">${ic.spark}<span>Resumir</span></button><button class="tb ai" data-ai="map" title="Mapa mental con IA">${ic.tree}<span>Mapa mental</span></button>`:'';
 const micBtn=(target,label)=>caps.dict&&!dictOff?`<button class="mic ${dictTarget===target&&dictState!=='idle'?'rec':''}" data-mic="${target}" aria-label="${dictTarget===target&&dictState!=='idle'?'Detener transcripción':'Transcribir voz'}" title="Transcribir voz (no se graba audio)">${ic.mic}${label?`<span>${dictTarget===target&&dictState!=='idle'?'Detener':label}</span>`:''}</button>`:'';
 function tplSelect(id){return PREF.templates.length?`<select id="${id}" aria-label="Insertar plantilla"><option value="">Plantilla…</option>${PREF.templates.map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('')}</select>`:''}
 
@@ -1268,7 +1281,7 @@ function renderReader(){
   if(S.folder==='notes'&&S.sel&&String(S.sel).startsWith('note:'))return renderNoteReader(R);
   if(S.folder==='team'&&S.sel)return renderSharedReader(R);
   const m=S.sel&&getMail(S.sel);
-  const ask=caps.sample&&!aiOff?`<button class="ask-pill" data-openai>${ic.spark}<span>Pregúntame lo que quiera...</span></button>`:'';
+  const ask=`<button class="ask-pill" data-openai>${ic.spark}<span>Pregúntame lo que quiera...</span></button>`;
   if(!m){R.innerHTML=`<div class="reader-empty"><div><b>Elige un correo</b>Usa J y K para moverte por la lista y Enter para abrir.</div></div>${ask}`;return}
   if(m.gm&&!m.msgs&&!m.loadingBody&&!m.bodyErr)loadBody(m);
   const replyTo=m.sent?m.to:m.from;const su=snoozeUntil(m);const pr=isPrio(m);
@@ -1282,7 +1295,7 @@ function renderReader(){
       <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x)}<span class="sp"></span><time>${x.pending?'Enviando…':esc(longDate(x.t))}</time></div>
       ${col?`<div class="mprev" data-expandmsg>${esc(plain(x.text.join(' ')))}</div>`:`<div class="mbody">${x.text.map(p=>`<p>${p}</p>`).join('')}</div>
       ${at.length?`<div class="atts"><div class="atts-h">${ic.clip}<span>${at.length===1?'1 adjunto':at.length+' adjuntos'}</span></div><div class="ftiles">${at.map(fileTile).join('')}</div></div>`:''}
-      ${last&&!m.sent?`<div class="qrow">${caps.sample&&!aiOff?'<button class="aiq" data-ai="draft" title="Redactar respuesta con IA">+ai</button>':''}${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
+      ${last&&!m.sent?`<div class="qrow"><button class="aiq" data-ai="draft" title="Redactar respuesta con IA">+ai</button>${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
     </article>`}).join('');
   else if(m.bodyErr)msgsH=`<div class="errbox"><b>No se pudo abrir el correo</b><p>${esc(errText(m.bodyErr))}</p><div class="row-btns"><button class="send" data-retrybody>Reintentar</button></div></div>`;
   else msgsH=`<article class="mcard"><div class="mhead">${avatar(m.from)}<b class="mfrom">${esc(m.from.name)}</b><span class="sp"></span><time>${esc(longDate(time(m)))}</time></div><div class="mbody"><p>${esc(m.snippet)}</p><p class="hint">Cargando el mensaje completo…</p></div></article>`;
@@ -1295,7 +1308,7 @@ function renderReader(){
       ${ti('unread',ic.circle,'Marcar como no leído (U)')}
       ${ti('pin',m.pinned?ic.pinF:ic.pin,m.pinned?'Desanclar':'Anclar',m.pinned?'on-pin':'')}
       ${ti('snooze',ic.clock,'Posponer (S)')}
-      ${caps.sample&&!aiOff?'<button class="ti ai-t" data-aimenu title="IA: resumir, mapa mental o respuesta">+ai</button>':''}
+      <button class="ti ai-t" data-aimenu title="IA: resumir, mapa mental o respuesta">+ai</button>
       <button class="ti" data-moremenu title="Más acciones" aria-label="Más acciones">${ic.more}</button>
       <span class="sp"></span>
       ${caps.db&&uid?`<button class="pillbtn" data-act="share" title="Compartir con el equipo">${ic.share}<span>Compartir</span></button>`:''}
@@ -1778,6 +1791,7 @@ $('#list').addEventListener('click',e=>{
 });
 $('#reader').addEventListener('click',e=>{
   const ai=e.target.closest('[data-ai]');
+  if(ai&&!aiLive()){openHandoff(ai.dataset.ai);return}
   if(ai&&caps.sample){
     const k=ai.dataset.ai;
     if(S.folder==='notes'&&noteDraft){
@@ -1811,6 +1825,7 @@ $('#reader').addEventListener('click',e=>{
     if(caps.sample&&!aiOff){b.value=q[1];aiDraft(m).then(()=>{const nb=$('#replyBox');if(nb&&(!nb.value.trim()||nb.value.trim()===q[1])){nb.value=q[2];nb.focus()}})}else{b.value=q[2];b.focus()}return}
   if(e.target.closest('[data-openreply]')){openReply();return}
   const am=e.target.closest('[data-aimenu]');if(am){const m=getMail(S.sel);if(!m)return;
+    if(!aiLive()){menuAt(am,[['Resumir con Claude',ic.spark,()=>openHandoff('sum')],['Mapa mental con Claude',ic.tree,()=>openHandoff('map')],['Redactar respuesta con Claude',ic.reply,()=>openHandoff('draft')],['Pedir otra cosa a Claude',ic.spark,()=>openHandoff()]]);return}
     menuAt(am,[['Resumir el hilo',ic.spark,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiSummary(m.id,threadText(m),'este hilo de correo')}],['Mapa mental',ic.tree,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiMap(m.id,threadText(m),'este hilo de correo')}],['Redactar respuesta',ic.reply,()=>{openReply(false);aiDraft(m)}],['Preguntarle al asistente',ic.spark,()=>openAI()]]);return}
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
     const it=[['Responder',ic.reply,()=>openReply()],['Reenviar',ic.fwd,()=>openCompose({subject:'Fwd: '+m.subject,body:'\n\n---------- Mensaje reenviado ----------\nDe: '+m.from.name+' <'+m.from.email+'>\nAsunto: '+m.subject+'\n\n'+(m.msgs?plain(lastOf(m).text.join('\n\n')):m.snippet||'')})]];
@@ -2118,9 +2133,9 @@ function renderChat(){
   const send=P.querySelector('.ai-send');send.classList.toggle('stop',CHAT.busy);send.innerHTML=CHAT.busy?ic.x:ic.send;send.setAttribute('aria-label',CHAT.busy?'Detener':'Enviar');
 }
 function openAI(){
-  if(!caps.sample||aiOff)return;
+  if(!aiLive())return openHandoff();
   const P=$('#aiPanel');
-  if(P.hidden){P.hidden=false;$('#app').classList.add('ai-open');
+  if(P.hidden||P.dataset.mode!=='chat'){P.hidden=false;P.dataset.mode='chat';$('#app').classList.add('ai-open');
     P.innerHTML=`<header><b>${ic.spark}Asistente</b><button class="ghost" data-ainew>Nueva</button><button class="icon-btn" data-aiclosepanel aria-label="Cerrar asistente">${ic.x}</button></header>
       <div class="ai-ctx"></div><div class="ai-log" aria-live="polite"></div>
       <div class="ai-input"><div class="dict-partial" id="dp-ai" hidden></div><div class="box">${micBtn('ai')}<textarea id="aiInput" rows="1" placeholder="Pregunta o pide algo sobre tu correo…"></textarea><button class="ai-send" data-aisend aria-label="Enviar">${ic.send}</button></div>
@@ -2170,10 +2185,60 @@ $('#aiPanel').addEventListener('click',e=>{
   if(e.target.closest('[data-aisend]')){if(CHAT.busy){CHAT.ctl&&CHAT.ctl.abort();return}const t=$('#aiInput');const v=t.value;t.value='';t.style.height='';askAI(v)}
 });
 $('#aiPanel').addEventListener('keydown',e=>{
-  if(e.target.id==='aiInput'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!CHAT.busy){const v=e.target.value;e.target.value='';e.target.style.height='';askAI(v)}}
+  if(e.target.id==='aiInput'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if($('#aiPanel').dataset.mode==='handoff'){e.preventDefault();handoffSend();return}if(!CHAT.busy){const v=e.target.value;e.target.value='';e.target.style.height='';askAI(v)}}
   if(e.key==='Escape'){e.stopPropagation();closeAI()}
 });
 $('#aiPanel').addEventListener('input',e=>{if(e.target.id==='aiInput'){e.target.style.height='auto';e.target.style.height=Math.min(140,e.target.scrollHeight)+'px'}});
+
+
+/* ---------- Pedir a Claude (sin clave de IA en el servidor) ----------
+ * Abre la app de Claude del usuario con el pedido y el contenido (correo, nota o resumen de la bandeja).
+ * Usa su plan de Claude: Brisa no paga ni guarda nada. En el celular usa "Compartir" → Claude;
+ * en el computador abre claude.ai con el texto. Siempre lo deja copiado por si acaso. */
+const HO={sum:'Resume este correo en viñetas breves y dime si tengo algo pendiente.',draft:'Redacta una respuesta cordial y breve a este correo, lista para copiar y enviar.',map:'Haz un mapa mental de esto: tema central, ideas principales y detalles, en formato de esquema.',today:'¿Qué tengo pendiente hoy según estos correos? Ordénalo por prioridad y dime qué responder primero.'};
+function handoffSource(kind){
+  if(kind!=='today'&&S.folder==='notes'&&noteDraft&&(noteDraft.text||'').trim())return {label:'tu nota de voz',text:'--- Nota de voz: '+(noteDraft.title||'sin título')+' ---\n'+noteDraft.text.slice(0,6000)};
+  const m=kind!=='today'&&S.sel&&getMail(S.sel);
+  if(m)return {label:'el correo «'+m.subject+'»',text:'--- Correo ---\n'+threadText(m).slice(-6000)};
+  const l=listFor('smart').slice(0,25);
+  return {label:'tus '+l.length+' correos más recientes',text:'--- Mi bandeja ---\n'+l.map(x=>`• ${people(x)} — ${x.subject} (${fmt(time(x))})${x.unread?' [sin leer]':''}${isPrio(x)?' [prioridad]':''}: ${preview(x).slice(0,140)}`).join('\n')};
+}
+function openHandoff(kind){
+  const P=$('#aiPanel');P.hidden=false;P.dataset.mode='handoff';$('#app').classList.add('ai-open');
+  const src=handoffSource(kind);
+  P.innerHTML=`<header><b>${ic.spark}Pedir a Claude</b><button class="icon-btn" data-aiclosepanel aria-label="Cerrar">${ic.x}</button></header>
+    <div class="ai-log ho">
+      <p class="ho-intro">Escribe o dicta lo que necesitas. Brisa abre <b>Claude</b> con tu pedido y ${esc(src.label)}. Usa tu plan de Claude, sin costo extra.</p>
+      <div class="ai-chips">${[['Resume este correo','sum'],['Redacta una respuesta','draft'],['Haz un mapa mental','map'],['¿Qué tengo pendiente hoy?','today']].map(c=>`<button data-hchip="${c[1]}">${esc(c[0])}</button>`).join('')}</div>
+    </div>
+    <div class="ai-input"><div class="dict-partial" id="dp-ai" hidden></div><div class="box">${micBtn('ai')}<textarea id="aiInput" rows="3" placeholder="¿Qué quieres pedirle a Claude?">${esc(kind&&HO[kind]||'')}</textarea></div>
+      <div class="ho-btns"><button class="ghost" data-hcopy>${ic.copy}<span>Copiar</span></button><button class="send" data-hsend>${ic.spark}<span>Enviar a Claude</span></button></div>
+      <small>Se abre Claude con el texto listo. Tú decides si lo envías.</small></div>`;
+  P.dataset.kind=kind||'';
+  setTimeout(()=>{const t=$('#aiInput');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function handoffText(){
+  const P=$('#aiPanel'),ask=($('#aiInput').value||'').trim();
+  const kind=P.dataset.kind==='today'||/pendiente hoy/i.test(ask)?'today':P.dataset.kind;
+  return (ask||'Ayúdame con esto.')+'\n\n'+handoffSource(kind).text+'\n\nResponde en español.';
+}
+async function handoffSend(){
+  const full=handoffText();
+  let copied=false;try{await navigator.clipboard.writeText(full);copied=true}catch(e){}
+  if(isMob()&&navigator.share){
+    try{await navigator.share({title:'Pedido para Claude',text:full});return}
+    catch(e){if(e&&e.name==='AbortError')return}
+  }
+  const a=document.createElement('a');a.href='https://claude.ai/new?q='+encodeURIComponent(full.slice(0,3500));a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();a.remove();
+  toast(copied?'Abriendo Claude. El texto también quedó copiado, por si necesitas pegarlo.':'Abriendo Claude…',null,6000);
+}
+$('#aiPanel').addEventListener('click',e=>{
+  if($('#aiPanel').dataset.mode!=='handoff')return;
+  const c=e.target.closest('[data-hchip]');if(c){const k=c.dataset.hchip;$('#aiPanel').dataset.kind=k;const t=$('#aiInput');t.value=HO[k];t.focus();return}
+  if(e.target.closest('[data-hsend]')){handoffSend();return}
+  if(e.target.closest('[data-hcopy]')){copy(handoffText());return}
+});
 
 /* ---------- Arranque ---------- */
 loadLocal();
