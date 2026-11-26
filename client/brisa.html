@@ -970,7 +970,7 @@ function fromThread(p,id){
   Object.assign(m,{gm:true,subject:decode(lm.subject||ms[0].subject||'')||'(sin asunto)',snippet:decode(lm.snippet||''),
     t:+lm.internalDate||Date.parse(lm.date)||0,unread:labels.has('UNREAD'),pinned:labels.has('STARRED'),trash:labels.has('TRASH'),
     inInbox:labels.has('INBOX'),sent:allSent,from:parseAddr((incoming||lm).sender,dn),to:parseAddr((lm.toRecipients||[])[0],dn),
-    count:p.messageCount||ms.length,cat:catOf(labels),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
+    count:p.messageCount||ms.length,cat:catOf(labels),first:parseAddr(ms[0].sender,dn),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
     parts:[...new Set(ms.map(x=>{const a=parseAddr(x.sender,dn);return (x.labelIds||[]).includes('SENT')?'Yo':String(a.name||'').split(/\s+/)[0]}).filter(Boolean))],url:typeof p.viewUrl==='string'&&p.viewUrl.startsWith('https://mail.google.com/')?p.viewUrl:null,dn});
   return m;
 }
@@ -1130,7 +1130,7 @@ function people(m){
   return m.from?m.from.name:'';
 }
 function rowHTML(m,sec){
-  const who=m.sent?m.to:m.from;
+  const who=m.sent?m.to:(m.first&&m.first.email?m.first:m.from);
   const n=m.msgs?m.msgs.length:(m.count||1);
   const clip=m.attach||m.hasAtt||(m.msgs&&m.msgs.some(x=>x.attach&&x.attach.length));
   const su=snoozeUntil(m);
