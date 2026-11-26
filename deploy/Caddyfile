@@ -1,0 +1,7 @@
+{$BRISA_DOMAIN} {
+	encode gzip
+	reverse_proxy brisa:3000 {
+		# Sin búfer: los avisos de correo nuevo (Server-Sent Events) llegan al instante.
+		flush_interval -1
+	}
+}

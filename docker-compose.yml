@@ -1,0 +1,26 @@
+# Brisa en un servidor propio (Oracle Cloud o Google Cloud gratis).
+# Lo arranca deploy/instalar.sh. Caddy pone HTTPS automático (Let's Encrypt) delante de Brisa.
+services:
+  brisa:
+    build: .
+    restart: unless-stopped
+    env_file: .env.local
+    environment:
+      - PORT=3000
+    volumes:
+      - ./data:/app/data
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - BRISA_DOMAIN=${BRISA_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - brisa
+volumes:
+  caddy_data: {}
