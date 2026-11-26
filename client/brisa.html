@@ -771,6 +771,20 @@ body{-webkit-font-smoothing:antialiased}
 @media (max-width:600px){.proj{grid-template-columns:28px 1fr 36px}.proj input[data-pk]{grid-column:2/4}}
 #cAt{background:var(--sunk);color:var(--fg);border:0;border-radius:9px;padding:7px;font:inherit}
 @media (min-width:761px){.chips .chip{display:none}}
+/* Personas como Spark */
+.addrgrp{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;padding:12px 16px 14px 22px}
+.addrgrp .at{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:500 22px var(--f-ui);color:var(--muted);margin-top:2px}
+.ag-h{display:flex;align-items:baseline;gap:8px;text-align:left;min-width:0}
+.ag-h b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agn{color:var(--faint);font-size:13px}
+.ag-senders{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px}
+.sdr{display:inline-flex;align-items:center;gap:6px;max-width:100%;font-size:15.5px;color:var(--fg);position:relative;padding:1px 0}
+.sdr:hover .sname{text-decoration:underline}
+.sname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--udot);flex:none}
+.mini{width:18px;height:18px;border-radius:50%;color:#fff;font:600 10.5px var(--f-ui);display:grid;place-items:center;flex:none}
+.agmore{color:var(--faint);font-size:14px}
+@media (min-width:761px){.addrgrp{grid-template-columns:30px minmax(0,1fr);gap:12px;padding:10px 14px 12px 18px}.addrgrp .at{width:30px;height:30px;font-size:19px}.ag-h b{font-size:15px}.sdr{font-size:14.5px}}
 </style>
 
 <div class="app" id="app">
@@ -1010,13 +1024,14 @@ const SECS=[{id:'prio',label:'Prioridad',mlabel:'Prioritario',icon:'bolt',micon:
 // "Vistos" junta lo ya leído de la bandeja; solo tiene sentido en "Elementos no leídos".
 const activeSecs=()=>SECS.filter(x=>x.id!=='seen'||(PREF.inboxType||'unread')==='unread');
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
-const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important)||(PREF.prioSenders||[]).includes(senderOf(m))));
+const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important&&PREF.prioImportant!==false)||(PREF.prioSenders||[]).includes(senderOf(m))));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
 function secQuery(id){
   const u=(PREF.inboxType||'unread')==='unread'&&!['pinned','all','seen'].includes(id)?' is:unread':'';
   const ps=(PREF.prioSenders||[]).slice(0,20),fr=ps.length?'from:('+ps.join(' OR ')+')':'';
-  const notP=' -is:important'+(fr?' -'+fr:'');
-  return {prio:'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u,people:'in:inbox category:primary'+notP+' -is:starred'+u,
+  const useImp=PREF.prioImportant!==false;
+  const notP=(useImp?' -is:important':'')+(fr?' -'+fr:'');
+  return {prio:useImp?'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u:(fr?'in:inbox '+fr+u:null),people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
     pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred',all:'in:inbox',
     search:buildQuery(),files:'has:attachment -in:trash newer_than:180d'}[id];
@@ -1062,6 +1077,30 @@ function matchLocal(m){const f=S.filters;
 function filterBar(){const f=S.filters,ch=(k,l,on)=>`<button class="fchip ${on?'on':''}" data-filter="${esc(k)}" aria-pressed="${!!on}">${l}</button>`;
   return FILTERS.map(([k,l])=>ch(k,l,f[k])).join('')+(PREF.projects||[]).map(p=>`<button class="fchip proj ${f.proj===p.name?'on':''}" data-fproj="${esc(p.name)}" aria-pressed="${f.proj===p.name}" style="--pc:${p.color}">${esc(p.name)}</button>`).join('')+(f.from?`<button class="fchip on" data-filter="from">De: ${esc(f.from)} ✕</button>`:'')}
 
+/* ---------- Personas como Spark: por la dirección tuya que recibió el correo ---------- */
+let MYADDR=[];
+function myAddrs(){
+  if(MYADDR.length)return MYADDR;
+  if(S.mode==='demo')return [ME.email];
+  const cnt=new Map();let n=0;
+  Object.values(G.map).forEach(m=>{if(!m||!m.rcpts||m.sent)return;n++;m.rcpts.forEach(a=>cnt.set(a,(cnt.get(a)||0)+1))});
+  return [...cnt].filter(([,c])=>c>=Math.max(2,n*.4)).map(([a])=>a);
+}
+function myAddrOf(m){const mine=myAddrs();return (m.rcpts||[]).find(a=>mine.includes(a))||mine[0]||'tu correo'}
+const avColor=p=>{let h=0;for(const c of String(p&&p.name||'?'))h=(h*31+c.charCodeAt(0))>>>0;return AVC[h%AVC.length]};
+function peopleCard(items,count){
+  const by=new Map();items.forEach(m=>{const k=myAddrOf(m);if(!by.has(k))by.set(k,[]);by.get(k).push(m)});
+  return [...by].map(([addr,list])=>{
+    const sd=new Map();list.forEach(m=>{const e=senderOf(m);if(!sd.has(e))sd.set(e,{e,p:m.from,unread:false,n:0});const x=sd.get(e);x.n++;if(m.unread)x.unread=true});
+    const all=[...sd.values()],show=all.slice(0,3),total=by.size===1?Math.max(count,list.length):list.length;
+    const rest=Math.max(0,total-show.reduce((a,x)=>a+x.n,0));
+    const unread=list.some(m=>m.unread);
+    return `<div class="addrgrp">${unread?'<span class="udot"></span>':''}<button class="at" data-section="people" aria-label="Ver todos los correos de Personas">@</button>
+      <div class="rb"><button class="ag-h" data-section="people"><b>${esc(addr)}</b><span class="agn">${total}</span></button>
+      <div class="ag-senders">${show.map(x=>`<button class="sdr" data-from="${esc(x.e)}" title="Ver correos de ${esc(x.p.name)}">${x.unread?'<span class="sdot"></span>':''}<span class="mini" style="background:${avColor(x.p)}">${esc(((x.p.name||'?').trim()[0]||'?').toUpperCase())}</span><span class="sname">${esc(x.p.name)}</span></button>`).join('')}${rest?`<button class="agmore" data-section="people">+${rest}</button>`:''}</div></div></div>`;
+  }).join('');
+}
+
 /* ---------- Agrupar por persona (Personal) ---------- */
 function groupRows(items,sec,limit){
   const groups=[],by=new Map();
@@ -1100,6 +1139,7 @@ function fromThread(p,id){
     t:+lm.internalDate||Date.parse(lm.date)||0,unread:labels.has('UNREAD'),pinned:labels.has('STARRED'),trash:labels.has('TRASH'),
     inInbox:labels.has('INBOX'),sent:allSent,from:parseAddr((incoming||lm).sender,dn),to:parseAddr((lm.toRecipients||[])[0],dn),
     count:p.messageCount||ms.length,cat:catOf(labels),first:parseAddr(ms[0].sender,dn),
+    rcpts:[...new Set([...((incoming||lm).toRecipients||[]),...((incoming||lm).ccRecipients||[])].map(a=>parseAddr(a,dn).email.toLowerCase()).filter(Boolean))],
     files:ms.flatMap(x=>(x.attachmentIds||[]).map((n,i)=>({name:typeof n==='string'?n:(n&&n.filename)||'adjunto',mid:x.id,i}))),important:labels.has('IMPORTANT'),hasAtt:ms.some(x=>(x.attachmentIds||[]).length||(x.attachments||[]).length),
     parts:[...new Set(ms.map(x=>{const a=parseAddr(x.sender,dn);return (x.labelIds||[]).includes('SENT')?'Yo':String(a.name||'').split(/\s+/)[0]}).filter(Boolean))],url:typeof p.viewUrl==='string'&&p.viewUrl.startsWith('https://mail.google.com/')?p.viewUrl:null,dn});
   return m;
@@ -1126,6 +1166,7 @@ async function loadFolder(f,force){
   G.loading[f]=false;renderAll();
 }
 async function loadSec(id,o={}){
+  if(!secQuery(id)){G.secs[id]={ids:[],count:0,token:null};schedule();return}
   const st=G.secs[id]||(G.secs[id]={ids:[],count:0,token:null});
   if(st.loading)return;st.loading=true;st.err=null;schedule();
   try{
@@ -1147,7 +1188,7 @@ async function loadSmart(force){
   const simple=(PREF.inboxType||'unread')==='simple';
   const ids=simple?['all']:activeSecs().map(x=>x.id);
   G.loading.smart=true;G.err.smart=null;renderList();
-  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:(id==='people'?12:3)),force})));
+  await Promise.all(ids.map(id=>loadSec(id,{size:simple?30:(S.section===id?25:(id==='people'?25:3)),force})));
   const errs=ids.map(id=>G.secs[id]&&G.secs[id].err).filter(Boolean);
   if(errs.length===ids.length)G.err.smart=errs[0];
   G.loading.smart=false;renderAll();
@@ -1299,13 +1340,13 @@ function secCard(sec){
   if(!items.length&&!(st&&st.loading&&!st.ids.length))return '';
   if(!items.length)return `<section class="sec card ${sec.id}"><div class="sec-h">${ic[sec.icon]}<span>${sec.label}</span></div><div class="loading"><div class="sk"></div></div></section>`;
   let shown,body;
-  if(sec.id==='people'){const r=groupRows(items,'people',3);shown=r.shown;body=r.html}else{shown=items.slice(0,3);body=shown.map(m=>rowHTML(m,sec.id)).join('')}
+  if(sec.id==='people'){shown=items;body=peopleCard(items,count)}else{shown=items.slice(0,3);body=shown.map(m=>rowHTML(m,sec.id)).join('')}
   visible.push(...shown);
   const clear=['people','notif','news','seen'].includes(sec.id);
   const lab=isMob()&&sec.mlabel?sec.mlabel:sec.label,icn=ic[isMob()&&sec.micon?sec.micon:sec.icon];
   return `<section class="sec card ${sec.id}"><div class="sec-h">${icn}<span>${lab}</span>${clear?`<button data-clear="${sec.id}" title="Marcar todo como hecho" aria-label="Marcar todo ${sec.label} como hecho">${ic.checkC}</button>`:''}</div>
     ${body}
-    ${count>shown.length?`<button class="showall" data-section="${sec.id}">Mostrar todo (${count})</button>`:''}</section>`;
+    ${count>shown.length&&sec.id!=='people'?`<button class="showall" data-section="${sec.id}">Mostrar todo (${count})</button>`:''}</section>`;
 }
 function fullList(id,label){
   const items=secItems(id);visible.push(...items);
@@ -1909,6 +1950,9 @@ function openSettings(){
       <div id="tplList" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="ghost" id="tplAdd" style="align-self:flex-start">+ Agregar plantilla</button>
       <p class="hint">${prefRef?'Se guardan en tu cuenta y solo tú puedes verlas.':'Se guardan solo en este navegador.'}</p>
+      ${S.mode==='gmail'?`<label class="lbl">Prioridad</label>
+      <label class="sig" style="font-size:14px;color:var(--fg)"><input type="checkbox" id="prioImp" ${PREF.prioImportant!==false?'checked':''}> Incluir los correos que Gmail marca como importantes</label>
+      <p class="hint">Desmárcalo para que Prioridad tenga solo a las personas que marcas con ⚡, como en Spark. El resto de los correos de personas va a Personas.</p>`:''}
       <label class="lbl">Proyectos</label>
       <p class="hint">Los correos que mencionan un proyecto en el asunto o el texto llevan su etiqueta de color, y puedes filtrar por proyecto.</p>
       <div id="projList" class="projlist"></div>
@@ -1939,10 +1983,11 @@ function openSettings(){
       if(nOn&&nOn.checked&&!PREF.notify){caps.desktop.notification.show({body:'Listo: te avisaré cuando llegue un correo nuevo.'}).then(()=>{PREF.notify=true;savePrefs()}).catch(()=>{PREF.notify=false;toast('No se activaron los avisos: el permiso fue rechazado.')})}
       else if(nOn&&!nOn.checked)PREF.notify=false;
       PREF.projects=projs.filter(p=>p.name.trim()).map(p=>({name:p.name.trim().slice(0,40),color:p.color,keys:[p.name.trim(),...String(p.keys||'').split(',').map(x=>x.trim()).filter(Boolean)].slice(0,8)}));
+      const pi=sc.querySelector('#prioImp');const prioChanged=pi&&(PREF.prioImportant!==false)!==pi.checked;if(pi)PREF.prioImportant=pi.checked;
       const dg=sc.querySelector('#dgOn');if(dg){PREF.digest={on:dg.checked,time:sc.querySelector('#dgTime').value||'08:00'};try{PREF.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}}
       PREF.signature=sc.querySelector('#sigTxt').value.trim().slice(0,1000);
       PREF.templates=tpls.filter(t=>t.name.trim()||t.body.trim()).map(t=>({name:t.name.trim().slice(0,60)||'Sin nombre',body:t.body.slice(0,4000)}));
-      savePrefs();sc.remove();toast('Ajustes guardados');renderReader();
+      savePrefs();sc.remove();toast('Ajustes guardados');renderReader();if(prioChanged&&S.mode==='gmail')loadSmart(true);else renderList();
     };
   });
 }
@@ -1976,6 +2021,7 @@ $('#list').addEventListener('click',e=>{
   const lm=e.target.closest('[data-loadmore]');if(lm){if(S.mode==='gmail')loadSec(lm.dataset.loadmore,{more:true,size:25});return}
   if(e.target.closest('[data-gateall]')){S.gateAll=!S.gateAll;renderList();return}
   const op=e.target.closest('[data-open]');if(op){openSel(op.dataset.open);return}
+  const fr=e.target.closest('[data-from]');if(fr){S.filters={from:fr.dataset.from};S.q='';$('#q').value='';S.section=null;$('.list-head').classList.add('searching');runSearch();return}
   const gp=e.target.closest('[data-grp]');if(gp){S.openGrp[gp.dataset.grp]=!S.openGrp[gp.dataset.grp];renderList();return}
   const ft=e.target.closest('[data-ftype]');if(ft){S.fileType=ft.dataset.ftype;renderList();return}
   const fp=e.target.closest('[data-fproj]');if(fp&&S.folder==='files'){S.filters.proj=S.filters.proj===fp.dataset.fproj?'':fp.dataset.fproj;renderList();return}
@@ -2508,7 +2554,7 @@ if(window.claude&&typeof window.claude.use==='function'){
     if(m&&pref==='gmail')connectGmail();else renderAll();
   });
   claude.use('sample').then(s=>{caps.sample=s;renderAIFab();renderReader()});
-  claude.use('brisa').then(b=>{caps.server=!!(b&&b.server);renderAll()});
+  claude.use('brisa').then(b=>{caps.server=!!(b&&b.server);if(caps.server)fetch('/api/me').then(r=>r.json()).then(j=>{MYADDR=(j.emails||[]).map(x=>String(x).toLowerCase());renderList()}).catch(()=>{});renderAll()});
   claude.use('desktop').then(async d=>{caps.desktop=d;if(!d)return;
     const check=async()=>{try{installState=d.install?await d.install.state():'unavailable'}catch(e){installState='unavailable'}renderNav()};
     await check();window.addEventListener('brisa-install-change',check);
