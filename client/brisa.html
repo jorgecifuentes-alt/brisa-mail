@@ -10,7 +10,7 @@
   --fg:#1B1C21; --muted:#5F6370; --faint:#8D919C; --line:#E6E7EC;
   --accent:#2F6FE4; --accent-ink:#FFFFFF; --accent-soft:#DCE7FC;
   --pin:#B9740A; --pin-soft:#FBF0D9; --ok:#14845A; --ok-soft:#DDF3E8; --danger:#C2363A;
-  --prio-bg:#FFF3E4; --bolt:#F2661C; --ibar:#E8452C; --cnt-bg:#C9CBD3; --chip-bg:#D6D7DC; --chip-fg:#FFFFFF; --fab2:#D8E5FD; --fab2-ink:#1E4FA8; --udot:#3B7BEA;
+  --prio-bg:#ECEEF2; --bolt:#F2661C; --ibar:#E8452C; --cnt-bg:#C9CBD3; --chip-bg:#D6D7DC; --chip-fg:#FFFFFF; --fab2:#D8E5FD; --fab2-ink:#1E4FA8; --udot:#3B7BEA;
   --m1:#1D74F5; --m2:#E8590C; --m3:#2B9348; --m4:#9C36B5; --m5:#D6336C; --m6:#0B8DA3;
   --shadow:0 1px 2px rgb(20 24 41 / .06), 0 4px 18px rgb(20 24 41 / .05);
   --f-display:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
@@ -22,7 +22,7 @@
   --fg:#E9EAEE; --muted:#A3A7B2; --faint:#737884; --line:#2C2F36;
   --accent:#7FA8FF; --accent-ink:#0B0D10; --accent-soft:#1F2C4A;
   --pin:#F0B64C; --pin-soft:#352A12; --ok:#4FC48D; --ok-soft:#14321F; --danger:#F27A7A;
-  --prio-bg:#33261A; --bolt:#FF8A4C; --ibar:#FF6B55; --cnt-bg:#3B3F49; --chip-bg:#353943; --chip-fg:#C9CCD4; --fab2:#24395F; --fab2-ink:#BFD3FF; --udot:#7FA8FF;
+  --prio-bg:#24272D; --bolt:#FF8A4C; --ibar:#FF6B55; --cnt-bg:#3B3F49; --chip-bg:#353943; --chip-fg:#C9CCD4; --fab2:#24395F; --fab2-ink:#BFD3FF; --udot:#7FA8FF;
   --m1:#4B95FF; --m2:#FF8A4C; --m3:#4CC77A; --m4:#C77DFF; --m5:#FF6B9A; --m6:#3BC4D9;
   --shadow:0 1px 2px rgb(0 0 0 / .4), 0 6px 24px rgb(0 0 0 / .25); color-scheme:dark}}
 :root[data-theme="dark"]{
@@ -30,7 +30,7 @@
   --fg:#E9EAEE; --muted:#A3A7B2; --faint:#737884; --line:#2C2F36;
   --accent:#7FA8FF; --accent-ink:#0B0D10; --accent-soft:#1F2C4A;
   --pin:#F0B64C; --pin-soft:#352A12; --ok:#4FC48D; --ok-soft:#14321F; --danger:#F27A7A;
-  --prio-bg:#33261A; --bolt:#FF8A4C; --ibar:#FF6B55; --cnt-bg:#3B3F49; --chip-bg:#353943; --chip-fg:#C9CCD4; --fab2:#24395F; --fab2-ink:#BFD3FF; --udot:#7FA8FF;
+  --prio-bg:#24272D; --bolt:#FF8A4C; --ibar:#FF6B55; --cnt-bg:#3B3F49; --chip-bg:#353943; --chip-fg:#C9CCD4; --fab2:#24395F; --fab2-ink:#BFD3FF; --udot:#7FA8FF;
   --m1:#4B95FF; --m2:#FF8A4C; --m3:#4CC77A; --m4:#C77DFF; --m5:#FF6B9A; --m6:#3BC4D9;
   --shadow:0 1px 2px rgb(0 0 0 / .4), 0 6px 24px rgb(0 0 0 / .25); color-scheme:dark}
 
@@ -509,7 +509,7 @@ body{-webkit-font-smoothing:antialiased}
 .rb{min-width:0}
 .row .av{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--ac,#999)}
 .sec.prio .row{background:var(--prio-bg)}
-.sec.prio .row[aria-selected="true"]{background:color-mix(in srgb,var(--bolt) 18%,var(--prio-bg))}
+.sec.prio .row[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--prio-bg))}
 .sec-back{display:flex;align-items:center;gap:8px;padding:6px 10px}
 .sec-back b{font-size:16px}.sec-back span{color:var(--faint);font-size:13px}
 .gate-row{display:flex;align-items:center;gap:8px;width:100%;padding:10px 18px;color:var(--muted);font-size:14.5px}
@@ -689,17 +689,17 @@ body{-webkit-font-smoothing:antialiased}
   .r-bot .r-prev{font:400 15px/1.35 var(--f-ui);color:var(--sp-prev)}
   .chips{margin-top:8px}
   .chip{background:var(--sp-chip);color:#fff;font:500 13.5px var(--f-ui);padding:3px 12px;border-radius:999px;letter-spacing:.02em}
-  .sec.prio .row{background:#FEF3E6}
+  .sec.prio .row{background:var(--prio-bg)}
   .showall{color:var(--sp-blue)!important;font:400 16.5px var(--f-ui);padding:22px 0 26px}
   .sec{margin:0}
   .list{padding-bottom:120px}
 }
 @media (max-width:760px) and (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
-  :root:not([data-theme="light"]) .sec.prio .row{background:#33261A}
+  :root:not([data-theme="light"]) .sec.prio .row{background:var(--prio-bg)}
   :root:not([data-theme="light"]) .fabs .ai{background:#2A2C31}:root:not([data-theme="light"]) .fabs .cmp{background:#1E3A66;color:#C2D7FF}
   :root:not([data-theme="light"]) .list-head .icon-btn,:root:not([data-theme="light"]) .sec-h button svg{color:#C4C7C5}}
 @media (max-width:760px){:root[data-theme="dark"]{--sp-ink:#E3E3E3;--sp-sub:#E8EAED;--sp-muted:#A8ABB0;--sp-prev:#8E9196;--sp-cnt:#4A4D53;--sp-chip:#3E4147}
-  :root[data-theme="dark"] .sec.prio .row{background:#33261A}
+  :root[data-theme="dark"] .sec.prio .row{background:var(--prio-bg)}
   :root[data-theme="dark"] .fabs .ai{background:#2A2C31}:root[data-theme="dark"] .fabs .cmp{background:#1E3A66;color:#C2D7FF}}
 /* Deslizar hacia abajo para actualizar */
 .ptr{position:absolute;left:50%;top:0;z-index:7;width:40px;height:40px;margin-left:-20px;border-radius:50%;background:var(--panel);box-shadow:0 2px 8px rgb(0 0 0 / .18);display:grid;place-items:center;color:var(--accent);transform:translateY(-60px);opacity:0;pointer-events:none}
