@@ -153,6 +153,20 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .reply{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
 .reply:focus-within{border-color:var(--accent)}
 .reply textarea{width:100%;border:0;resize:vertical;min-height:84px;padding:12px 14px;background:transparent;color:var(--fg);font:15px/1.5 var(--f-ui);outline:none}
+.rhead{border-bottom:1px solid var(--line);padding:8px 10px 4px;display:flex;flex-direction:column;gap:2px}
+.rmodes{display:flex;gap:6px;padding-bottom:6px;flex-wrap:wrap}
+.rm{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font:500 13.5px var(--f-ui)}
+.rm svg{width:16px;height:16px}.rm.on{background:#D3E3FD;border-color:#D3E3FD;color:#0B57D0}
+.rf{display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-top:1px solid var(--line)}
+.rf>label{width:38px;flex:none;color:var(--muted);font-size:13.5px;padding-top:7px}
+.rc-chips{flex:1;display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:0;cursor:text;padding:2px 0}
+.rchip{display:inline-flex;align-items:center;gap:2px;max-width:100%;padding:3px 4px 3px 10px;border-radius:999px;background:var(--sunk);font-size:13.5px;color:var(--fg)}
+.rchip button{width:22px;height:22px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:16px;line-height:1;display:grid;place-items:center}
+.rchip button:hover{background:var(--line)}
+.rc-in{flex:1 1 120px;min-width:100px;border:0;background:transparent;color:var(--fg);font:14px var(--f-ui);outline:0;padding:5px 2px}
+.rc-more{flex:none;border:0;background:transparent;color:var(--accent,#0B57D0);font:500 13px var(--f-ui);padding:6px 4px}
+.rf-note{display:flex;align-items:center;gap:8px;padding:6px 0 4px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}.rf-note svg{width:16px;height:16px;flex:none}
+@media (max-width:760px){.reply textarea{min-height:150px}.rc-in{font-size:16px}}
 .reply-foot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--line);background:var(--hover)}
 .reply-foot small{color:var(--faint);flex:1}
 .send{background:var(--accent);color:var(--accent-ink);font-weight:600;padding:8px 16px;border-radius:9px}
@@ -1145,6 +1159,7 @@ const PREF={signature:'',templates:[
   {name:'Agendar reunión',body:'Hola, ¿te acomoda conversarlo esta semana? Tengo disponibilidad el martes o el jueves entre 10:00 y 12:00.'},
   {name:'Agradecimiento',body:'¡Muchas gracias! Lo reviso y te escribo pronto.'}],snoozes:{}};
 const AI={sum:{},map:{}};
+let RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false}; // destinatarios del cuadro de respuesta
 // Rol del asistente (editable en Ajustes). Se usa en el asistente de Brisa y al "Pedir a Claude".
 const AI_ROLE_DEFAULT=`Rol: eres mi Asistente Ejecutivo de alto nivel. Gestionas mi flujo de información (correos, reuniones, calendario y contactos) con eficiencia, seguridad y proactividad.
 Capacidades: analizar hilos, redactar borradores con mi estilo, buscar información histórica y organizar la bandeja; programar eventos, ver disponibilidad y resolver conflictos de horario; resumir reuniones y extraer puntos de acción; recordar mis preferencias y datos clave.
@@ -1861,14 +1876,72 @@ function renderReader(){
       ${((su&&su>Date.now())||m.trash)?`<div class="meta-tags">${su&&su>Date.now()?`<span class="tag snz">Vuelve ${esc(longDate(su))}</span>`:''}${m.trash?'<span class="tag">En papelera</span>':''}</div>`:''}
       ${aiCards(m.id)}
       ${msgsH}
-      <div class="reply" id="replyWrap" ${open?'':'hidden'}><textarea id="replyBox" placeholder="Responder a ${esc(replyTo&&replyTo.name)}…"></textarea>
+      <div class="reply" id="replyWrap" ${open?'':'hidden'}>${replyHead(m)}<textarea id="replyBox" placeholder="${RS.mode==='fwd'?'Agrega un mensaje (opcional)…':'Escribe tu respuesta…'}"></textarea>
         <div class="dict-partial" id="dp-reply" hidden></div>
         <div class="reply-foot">${micBtn('reply')}${caps.sample&&!aiOff?`<button class="ghost ai-draft" data-ai="draft" title="Escribe una idea y la IA redacta la respuesta">${ic.spark}<span>Redactar con IA</span></button>`:''}${tplSelect('replyTpl')}
-          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}${caps.server&&S.mode==='gmail'?FOLLOW_SEL('rFollow'):''}<small></small><button class="send" data-act="send">Enviar</button></div></div>
+          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}${caps.server&&S.mode==='gmail'?FOLLOW_SEL('rFollow'):''}<small></small><button class="send" data-act="send">${RS.mode==='fwd'?'Reenviar':'Enviar'}</button></div></div>
     </div>${ask}`;
   const rb=$('#replyBox');if(rb&&draft)rb.value=draft;
 }
-function openReply(focus=true){const m=getMail(S.sel);if(!m)return;S.replyOpen=m.id;const w=$('#replyWrap');if(w)w.hidden=false;const b=$('#replyBox');if(b&&focus){b.focus();b.scrollIntoView({block:'nearest'})}}
+/* ---------- Responder / Responder a todos / Reenviar ----------
+ * Arriba del cuadro se ven y se editan los destinatarios: Para, CC y CCO. */
+const meSet=()=>new Set(myAddrs().map(x=>String(x).toLowerCase()));
+const addrOk=a=>a&&a.email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email);
+const uniqA=l=>{const seen=new Set();return l.filter(a=>{const k=String(a.email||'').toLowerCase();if(!addrOk(a)||seen.has(k))return false;seen.add(k);return true})};
+function replyDefaults(m,mode){
+  const me=meSet(),notMe=a=>a&&!a.me&&!me.has(String(a.email||'').toLowerCase());
+  const msgs=m.msgs||[],tgt=[...msgs].reverse().find(x=>!x.sent&&!(x.from&&x.from.me))||msgs[msgs.length-1]||{from:m.from,to:[]};
+  if(mode==='fwd')return {to:[],cc:[],bcc:[]};
+  const fromMe=tgt.sent||(tgt.from&&tgt.from.me);
+  const to=uniqA(fromMe?(tgt.toL||tgt.to||[]).filter(notMe):[tgt.from].filter(notMe));
+  if(mode!=='all')return {to:to.length?to:uniqA([m.sent?m.to:m.from]),cc:[],bcc:[]};
+  const toK=new Set(to.map(a=>a.email.toLowerCase()));
+  const rest=[...(tgt.toL||(tgt.ccL?[]:tgt.to)||[]),...(tgt.ccL||[])].filter(a=>notMe(a)&&!toK.has(String(a.email||'').toLowerCase()));
+  return {to:to.length?to:uniqA([m.from]),cc:uniqA(rest),bcc:[]};
+}
+function openReply(focus=true,mode){
+  const m=getMail(S.sel);if(!m)return;
+  const b0=$('#replyBox');if(b0&&b0.value){try{sessionStorage.setItem('brisa-reply-'+m.id,b0.value)}catch(e){}}
+  if(mode||RS.id!==m.id){const md=mode||'reply';RS=Object.assign({id:m.id,mode:md,showCc:md==='all'},replyDefaults(m,md));if(md==='fwd')RS.showCc=false}
+  S.replyOpen=m.id;renderReader();
+  const w=$('#replyWrap');if(w){w.hidden=false;w.scrollIntoView({block:isMob()?'start':'nearest',behavior:'smooth'})}
+  if(focus){const t=RS.mode==='fwd'&&!RS.to.length?$('#rcIn-to'):$('#replyBox');t&&t.focus({preventScroll:true})}
+}
+const chipList=(f)=>`<div class="rc-chips" data-rf="${f}">${RS[f].map((a,k)=>`<span class="rchip" title="${esc(a.email)}">${esc(a.name&&a.name!==a.email?a.name:a.email)}<button type="button" data-rcdel="${f}:${k}" aria-label="Quitar ${esc(a.name||a.email)}">×</button></span>`).join('')}<input id="rcIn-${f}" class="rc-in" list="rcPeople" type="email" inputmode="email" autocomplete="off" placeholder="${RS[f].length?'':'Agregar correo'}" aria-label="Agregar destinatario en ${f==='to'?'Para':f.toUpperCase()}"></div>`;
+function replyHead(m){
+  if(RS.id!==m.id)RS=Object.assign({id:m.id,mode:'reply',showCc:false},replyDefaults(m,'reply'));
+  const md=RS.mode,tab=(k,l,i)=>`<button type="button" class="rm ${md===k?'on':''}" data-rmode="${k}" aria-pressed="${md===k}">${i}<span>${l}</span></button>`;
+  const people=new Map();(S.mode==='demo'?mails:Object.values(G.map)).forEach(x=>[x.from,x.to].concat(x.msgs?x.msgs.flatMap(y=>[y.from,...(y.to||[])]):[]).forEach(a=>{if(addrOk(a)&&!a.me)people.set(a.email.toLowerCase(),a)}));
+  const fwdSrc=[...(m.msgs||[])].reverse().find(x=>x.id&&!x.pending)||{},fwdAtt=md==='fwd'?(fwdSrc.attach&&fwdSrc.attach.length?fwdSrc.attach:(m.attach?[m.attach]:[])):[];
+  return `<div class="rhead"><div class="rmodes">${tab('reply','Responder',ic.reply)}${tab('all','A todos',ic.replyAll)}${tab('fwd','Reenviar',ic.fwd)}</div>
+    <div class="rf"><label for="rcIn-to">Para</label>${chipList('to')}${RS.showCc?'':`<button type="button" class="rc-more" data-rcmore>CC/CCO</button>`}</div>
+    ${RS.showCc?`<div class="rf"><label for="rcIn-cc">CC</label>${chipList('cc')}</div><div class="rf"><label for="rcIn-bcc">CCO</label>${chipList('bcc')}</div>`:''}
+    ${md==='fwd'?`<div class="rf-note">${ic.fwd}<span>Se reenvía «${esc(m.subject||'')}»${fwdAtt.length?` con ${fwdAtt.length===1?'su adjunto':'sus '+fwdAtt.length+' adjuntos'}`:''}.</span></div>`:''}
+    <datalist id="rcPeople">${[...people.values()].slice(0,300).map(a=>`<option value="${esc(a.email)}">${esc(a.name||'')}</option>`).join('')}</datalist></div>`;
+}
+function rcCommit(f,input){
+  const raw=String(input.value||'').trim();if(!raw)return true;
+  const parts=raw.split(/[,;\s]+/).filter(Boolean);let bad=[];
+  parts.forEach(e=>{const a={name:'',email:e};if(addrOk(a))RS[f]=uniqA(RS[f].concat(a));else bad.push(e)});
+  input.value=bad.join(' ');
+  if(bad.length){toast('Revisa la dirección: '+bad.join(', '));return false}
+  return true;
+}
+function rcRedraw(focusF){const w=$('#replyWrap');if(!w)return;const box=$('#replyBox'),v=box?box.value:'';const m=getMail(S.sel);if(!m)return;
+  const h=w.querySelector('.rhead');if(h)h.outerHTML=replyHead(m);const b=$('#replyBox');if(b){b.value=v;b.placeholder=RS.mode==='fwd'?'Agrega un mensaje (opcional)…':'Escribe tu respuesta…'}
+  const sb=w.querySelector('[data-act="send"]');if(sb)sb.textContent=RS.mode==='fwd'?'Reenviar':'Enviar';
+  if(focusF){const i=$('#rcIn-'+focusF);i&&i.focus()}}
+document.addEventListener('click',e=>{
+  const md=e.target.closest('[data-rmode]');if(md){const m=getMail(S.sel);if(!m)return;const k=md.dataset.rmode;RS=Object.assign({id:m.id,mode:k,showCc:k==='all'},replyDefaults(m,k));rcRedraw(k==='fwd'?'to':null);return}
+  const dl=e.target.closest('[data-rcdel]');if(dl){const [f,k]=dl.dataset.rcdel.split(':');RS[f].splice(+k,1);rcRedraw(f);return}
+  if(e.target.closest('[data-rcmore]')){RS.showCc=true;rcRedraw('cc');return}
+  const ch=e.target.closest('.rc-chips');if(ch&&e.target===ch){const i=ch.querySelector('.rc-in');i&&i.focus()}
+});
+document.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('.rc-in');if(!i)return;const f=i.id.replace('rcIn-','');
+  if(e.key==='Enter'||e.key===','||e.key===';'||(e.key===' '&&i.value.includes('@'))){e.preventDefault();if(rcCommit(f,i))rcRedraw(f)}
+  else if(e.key==='Backspace'&&!i.value&&RS[f].length){RS[f].pop();rcRedraw(f)}},true);
+document.addEventListener('change',e=>{const i=e.target.closest&&e.target.closest('.rc-in');if(!i)return;const f=i.id.replace('rcIn-','');if(i.value.includes('@')&&rcCommit(f,i))rcRedraw(f)},true);
+document.addEventListener('focusout',e=>{const i=e.target.closest&&e.target.closest('.rc-in');if(!i||!i.value.trim())return;const f=i.id.replace('rcIn-','');setTimeout(()=>{if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('[data-rcdel]'))return;if(rcCommit(f,i))rcRedraw()},120)},true);
 function menuAt(anchor,items){
   closePop();
   const p=document.createElement('div');p.className='pop';p.setAttribute('role','menu');
@@ -2209,22 +2282,45 @@ function queueSend(label,doIt,cancel){
 function withSig(body,on){return on&&PREF.signature?body+'\n\n-- \n'+PREF.signature:body}
 function sendReply(){
   const m=getMail(S.sel);const box=$('#replyBox');if(!m||!box)return;
-  const raw=box.value.trim();if(!raw){box.focus();return}
+  ['to','cc','bcc'].forEach(f=>{const i=$('#rcIn-'+f);if(i&&i.value.trim())rcCommit(f,i)});
+  const mode=RS.id===m.id?RS.mode:'reply';
+  const raw=box.value.trim();if(!raw&&mode!=='fwd'){box.focus();return}
+  if(!RS.to.length){toast('Agrega al menos un destinatario en "Para".');const i=$('#rcIn-to');i&&i.focus();return}
   if(m.gm&&!m.msgs){toast('Espera a que cargue el correo para responder.');return}
+  if(mode==='fwd')return sendForward(m,box,raw);
+  const rcp={to:RS.to.map(a=>a.email),cc:RS.cc.map(a=>a.email),bcc:RS.bcc.map(a=>a.email)};
   const body=withSig(raw,$('#sigOn')?$('#sigOn').checked:false);
   const fDays=+(($('#rFollow')||{}).value||0),rTo=m.sent?m.to:m.from;
-  const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true};
+  const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true,to:RS.to.concat(RS.cc),toL:RS.to.slice(),ccL:RS.cc.slice()};
   m.msgs.push(msg);box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
   renderReader();
   const undo=()=>{const i=m.msgs.indexOf(msg);if(i>=0)m.msgs.splice(i,1);if(S.sel===m.id){renderReader();const b=$('#replyBox');if(b)b.value=raw}};
   queueSend('Enviando respuesta…',async()=>{
     try{
       if(m.gm){const target=[...m.msgs].reverse().find(x=>x.id&&!x.sent)||[...m.msgs].reverse().find(x=>x.id);
-        await gcall('reply',{messageId:target.id,body});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
+        await gcall('reply',caps.server?{messageId:target.id,body,replyAll:mode==='all',...rcp}:{messageId:target.id,body,replyAll:mode==='all'});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
       msg.pending=false;if(S.sel===m.id)renderReader();toast('Respuesta enviada');
       if(fDays&&rTo)addFollow({to:rTo.email,toName:rTo.name,subject:m.subject,days:fDays});
     }catch(e){undo();toast(errText(e)+' Tu respuesta quedó en el borrador.',null,8000)}
   },undo);
+}
+
+function sendForward(m,box,raw){
+  const body=withSig(raw,$('#sigOn')?$('#sigOn').checked:false);
+  const rcp={to:RS.to.map(a=>a.email),cc:RS.cc.map(a=>a.email),bcc:RS.bcc.map(a=>a.email)};
+  const tgt=[...(m.msgs||[])].reverse().find(x=>x.id&&!x.pending)||{},last=tgt.text?tgt:((m.msgs||[]).slice(-1)[0]||{});
+  box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
+  RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false};S.replyOpen=null;renderReader();
+  const back=()=>{try{sessionStorage.setItem('brisa-reply-'+m.id,raw)}catch(e){}};
+  queueSend('Reenviando…',async()=>{
+    try{
+      if(m.gm&&caps.server&&tgt.id){const r=await gcall('forward',{messageId:tgt.id,body,...rcp});toast('Reenviado'+(r&&r.attachments?` con ${r.attachments===1?'1 adjunto':r.attachments+' adjuntos'}`:''))}
+      else if(m.gm){const q='\n\n---------- Mensaje reenviado ----------\nDe: '+(last.from?last.from.name+' <'+(last.from.email||'')+'>':'')+'\nAsunto: '+m.subject+'\n\n'+plain((last.text||[]).join('\n\n'));
+        await gcall('send_message',{to:rcp.to,cc:rcp.cc,bcc:rcp.bcc,subject:'Fwd: '+m.subject,body:body+q});toast('Reenviado (sin adjuntos)')}
+      else toast('Reenviado (ejemplo)');
+      try{await caps.mcp.invalidate('Gmail')}catch(e){}
+    }catch(e){back();toast(errText(e)+' Tu texto quedó guardado.',null,8000)}
+  },back);
 }
 
 /* ---------- Modales ---------- */
@@ -2433,12 +2529,12 @@ $('#reader').addEventListener('click',e=>{
     act(n,S.sel,a);return}
   const qr=e.target.closest('[data-qreply]');if(qr){const q=QCHIPS[+qr.dataset.qreply];const m=getMail(S.sel);openReply(false);const b=$('#replyBox');if(!b||!m)return;
     if(caps.sample&&!aiOff){b.value=q[1];aiDraft(m).then(()=>{const nb=$('#replyBox');if(nb&&(!nb.value.trim()||nb.value.trim()===q[1])){nb.value=q[2];nb.focus()}})}else{b.value=q[2];b.focus()}return}
-  if(e.target.closest('[data-openreply]')){openReply();return}
+  const orp=e.target.closest('[data-openreply]');if(orp){openReply(true,orp.dataset.openreply==='all'?'all':'reply');return}
   const am=e.target.closest('[data-aimenu]');if(am){const m=getMail(S.sel);if(!m)return;
     if(!aiLive()){menuAt(am,[['Resumir con Claude',ic.spark,()=>openHandoff('sum')],['Mapa mental con Claude',ic.tree,()=>openHandoff('map')],['Redactar respuesta con Claude',ic.reply,()=>openHandoff('draft')],['Pedir otra cosa a Claude',ic.spark,()=>openHandoff()]]);return}
     menuAt(am,[['Resumir el hilo',ic.spark,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiSummary(m.id,threadText(m),'este hilo de correo')}],['Mapa mental',ic.tree,()=>{if(m.gm&&!m.msgs)return toast('Espera a que cargue el correo.');aiMap(m.id,threadText(m),'este hilo de correo')}],['Redactar respuesta',ic.reply,()=>{openReply(false);aiDraft(m)}],['Preguntarle al asistente',ic.spark,()=>openAI()]]);return}
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
-    const it=[['Responder',ic.reply,()=>openReply()],['Reenviar',ic.fwd,()=>openCompose({subject:'Fwd: '+m.subject,body:'\n\n---------- Mensaje reenviado ----------\nDe: '+m.from.name+' <'+m.from.email+'>\nAsunto: '+m.subject+'\n\n'+(m.msgs?plain(lastOf(m).text.join('\n\n')):m.snippet||'')})]];
+    const it=[['Responder',ic.reply,()=>openReply(true,'reply')],['Responder a todos',ic.replyAll,()=>openReply(true,'all')],['Reenviar',ic.fwd,()=>openReply(true,'fwd')]];
     it.push(['Modo lectura',ic.doc,()=>setZen(true)]);
     if(isPhone())it.push(['Tamaño de letra',ic.doc,()=>openFontPanel(mm)]);
     it.push(['Ver correos de esta persona',ic.person,()=>{S.filters={from:senderOf(m)};S.q='';$('#q').value='';S.folder='smart';S.section=null;$('.list-head').classList.add('searching');$('#app').classList.remove('reading');runSearch();renderNav()}]);
