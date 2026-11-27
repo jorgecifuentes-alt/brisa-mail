@@ -194,6 +194,8 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .aw-send{width:38px;height:38px;border-radius:12px;border:0;background:#0B57D0;color:#fff;display:grid;place-items:center;flex:none}.aw-send svg{width:18px;height:18px}
 .aw-paste{display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:500 13px var(--f-ui);flex:none}.aw-paste svg{width:15px;height:15px}
 @media (max-width:760px){.aw-box textarea{font-size:16px}.awc.three{margin-left:0}}
+.pnames{display:flex;flex-wrap:wrap;gap:6px}.pnames .rchip{gap:6px}.pnames .rchip svg{width:14px;height:14px;color:#F2681C}
+.pn-add{display:flex;gap:8px}.pn-add input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
 .rhead{border-bottom:1px solid var(--line);padding:8px 10px 4px;display:flex;flex-direction:column;gap:2px}
 .rmodes{display:flex;gap:6px;padding-bottom:6px;flex-wrap:wrap}
 .rm{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font:500 13.5px var(--f-ui)}
@@ -1259,7 +1261,16 @@ const activeSecs=()=>(PREF.inboxType||'unread')==='goals'?SECS.filter(x=>x.id===
 // "Lista de objetivos": Prioridad arriba y el resto de la bandeja en orden de llegada, separado por día.
 const feedOn=()=>(PREF.inboxType||'unread')==='goals';
 const senderOf=m=>String(m&&m.from&&m.from.email||'').toLowerCase();
-const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important&&PREF.prioImportant!==false)||(PREF.prioSenders||[]).includes(senderOf(m))));
+// Personas prioritarias por nombre (Ajustes → Prioridad). "Alexis Rojas" reconoce "ALEXIS ALBERTO ROJAS RUIZ":
+// basta que estén todas las palabras del nombre, sin importar tildes ni mayúsculas.
+const PRIO_NAMES_INICIAL=['Alexis Rojas','Viviana Molina','José Moscoso'];
+const prioNames=()=>Array.isArray(PREF.prioNames)?PREF.prioNames:PRIO_NAMES_INICIAL;
+const nameToks=n=>norm(n).split(/[^a-z0-9ñ]+/).filter(w=>w.length>1);
+// Para la búsqueda de Gmail: cada palabra con y sin tilde ("José" o "Jose").
+const qToks=n=>String(n||'').toLowerCase().split(/[\s,;.]+/).filter(w=>w.length>1).map(w=>{const f=norm(w).replace(/[^a-z0-9ñ]/g,'');return f&&f!==w?'{from:'+f+' from:'+w+'}':'from:'+(f||w)});
+const matchName=(p,n)=>{if(!p)return false;const hay=' '+norm((p.name||'')+' '+(p.email||'')).replace(/[^a-z0-9ñ]+/g,' ')+' ';const t=nameToks(n);return t.length>0&&t.every(w=>hay.includes(' '+w+' ')||hay.includes(' '+w))};
+const prioByName=m=>prioNames().some(n=>matchName(m.from,n)||matchName(m.first,n));
+const isPrio=m=>!!(m&&!m.sent&&(m.prio||(S.mode==='gmail'&&m.important&&PREF.prioImportant!==false)||(PREF.prioSenders||[]).includes(senderOf(m))||prioByName(m)));
 const secOf=m=>isPrio(m)?'prio':m.pinned?'pinned':(m.cat||'people');
 // Vistas por nombre: cuentan la semana actual, desde el lunes 00:00 (cada lunes parte de cero).
 const weekStart=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
@@ -1267,10 +1278,13 @@ const byName=()=>S.folder==='smart'&&(namesMode()||sortCfg().by==='from');
 const weekLabel=()=>'Semana del '+new Date(weekStart()).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'short'});
 function secQuery(id){
   const u=(PREF.inboxType||'unread')==='unread'&&!['pinned','all','seen'].includes(id)?' is:unread':'';
-  const ps=(PREF.prioSenders||[]).slice(0,20),fr=ps.length?'from:('+ps.join(' OR ')+')':'';
+  // Prioridad = {cualquiera de: importante, remitentes ⚡, (nombre Y apellido) de cada persona prioritaria}.
+  const ps=(PREF.prioSenders||[]).slice(0,20),nq=prioNames().slice(0,20).map(n=>qToks(n).join(' ')).filter(Boolean).map(x=>'('+x+')');
+  const parts=ps.map(e=>'from:'+e).concat(nq);
   const useImp=PREF.prioImportant!==false;
-  const notP=(useImp?' -is:important':'')+(fr?' -'+fr:'');
-  return {prio:useImp?'in:inbox (is:important'+(fr?' OR '+fr:'')+')'+u:(fr?'in:inbox '+fr+u:null),people:'in:inbox category:primary'+notP+' -is:starred'+u,
+  const any=(useImp?['is:important']:[]).concat(parts);
+  const notP=(useImp?' -is:important':'')+parts.map(x=>' -'+x).join('');
+  return {prio:any.length?'in:inbox {'+any.join(' ')+'}'+u:null,people:'in:inbox category:primary'+notP+' -is:starred'+u,
     notif:'in:inbox category:updates'+notP+' -is:starred'+u,news:'in:inbox {category:promotions category:social category:forums}'+notP+' -is:starred'+u,
     pinned:'is:starred -in:trash'+notP,seen:'in:inbox is:read -is:starred'+notP,all:byName()?'in:inbox after:'+ymd(weekStart()-D):'in:inbox',
     search:buildQuery(),files:'has:attachment -in:trash newer_than:180d',feed:'in:inbox'+notP}[id];
@@ -2590,6 +2604,10 @@ function openSettings(){
       <div id="tplList" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="ghost" id="tplAdd" style="align-self:flex-start">+ Agregar plantilla</button>
       <p class="hint">${prefRef?'Se guardan en tu cuenta y solo tú puedes verlas.':'Se guardan solo en este navegador.'}</p>
+      <label class="lbl" for="pnIn">Personas prioritarias</label>
+      <div class="pnames" id="pnList"></div>
+      <div class="pn-add"><input id="pnIn" type="text" placeholder="Nombre y apellido, ej. Alexis Rojas" autocomplete="off"><button type="button" class="ghost" id="pnAdd">Agregar</button></div>
+      <p class="hint">Sus correos van siempre a Prioridad. Basta el nombre y un apellido: no importan tildes ni mayúsculas.</p>
       ${S.mode==='gmail'?`<label class="lbl">Prioridad</label>
       <label class="sig" style="font-size:14px;color:var(--fg)"><input type="checkbox" id="prioImp" ${PREF.prioImportant!==false?'checked':''}> Incluir los correos que Gmail marca como importantes</label>
       <p class="hint">Desmárcalo para que Prioridad tenga solo a las personas que marcas con ⚡, como en Spark. El resto de los correos de personas va a Personas.</p>`:''}
@@ -2611,6 +2629,13 @@ function openSettings(){
     draw(sc);
     sc.addEventListener('input',e=>{const t=e.target;if(t.dataset.tn)tpls[t.dataset.tn].name=t.value;if(t.dataset.tb)tpls[t.dataset.tb].body=t.value});
     sc.addEventListener('click',e=>{const d=e.target.closest('[data-tdel]');if(d){tpls.splice(+d.dataset.tdel,1);draw(sc)}});
+    const pn=prioNames().slice();
+    const drawPN=()=>{sc.querySelector('#pnList').innerHTML=pn.map((n,i)=>`<span class="rchip">${ic.bolt}${esc(n)}<button type="button" data-pndel="${i}" aria-label="Quitar ${esc(n)}">×</button></span>`).join('')||'<span class="hint">Nadie aún.</span>'};
+    drawPN();
+    const addPN=()=>{const i=sc.querySelector('#pnIn'),v=i.value.trim().replace(/\s+/g,' ');if(!v)return;if(!nameToks(v).length){toast('Escribe un nombre válido.');return}const tc=v.toLowerCase().replace(/(^|\s)\p{L}/gu,c=>c.toUpperCase());if(!pn.some(x=>norm(x)===norm(tc)))pn.push(tc.slice(0,60));i.value='';drawPN();i.focus()};
+    sc.querySelector('#pnAdd').onclick=addPN;sc.querySelector('#pnIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPN()}});
+    sc.addEventListener('click',e=>{const d=e.target.closest('[data-pndel]');if(d){pn.splice(+d.dataset.pndel,1);drawPN()}});
+    sc._pn=pn;
     sc.querySelector('#roleReset').onclick=()=>{sc.querySelector('#roleTxt').value=AI_ROLE_DEFAULT};
     sc.querySelector('#tplAdd').onclick=()=>{tpls.push({name:'Nueva plantilla',body:''});draw(sc);sc.querySelector(`#tn-${tpls.length-1}`).select()};
     const projs=(PREF.projects||[]).map(p=>({name:p.name,color:p.color,keys:(p.keys||[]).join(', ')}));
@@ -2628,7 +2653,8 @@ function openSettings(){
       if(nOn&&nOn.checked&&!PREF.notify){caps.desktop.notification.show({body:'Listo: te avisaré cuando llegue un correo nuevo.'}).then(()=>{PREF.notify=true;savePrefs()}).catch(()=>{PREF.notify=false;toast('No se activaron los avisos: el permiso fue rechazado.')})}
       else if(nOn&&!nOn.checked)PREF.notify=false;
       PREF.projects=projs.filter(p=>p.name.trim()).map(p=>({name:p.name.trim().slice(0,40),color:p.color,keys:[p.name.trim(),...String(p.keys||'').split(',').map(x=>x.trim()).filter(Boolean)].slice(0,8)}));
-      const pi=sc.querySelector('#prioImp');const prioChanged=pi&&(PREF.prioImportant!==false)!==pi.checked;if(pi)PREF.prioImportant=pi.checked;
+      const pnChanged=JSON.stringify(sc._pn)!==JSON.stringify(prioNames());if(pnChanged)PREF.prioNames=sc._pn.slice(0,40);
+      const pi=sc.querySelector('#prioImp');const prioChanged=pnChanged||pi&&(PREF.prioImportant!==false)!==pi.checked;if(pi)PREF.prioImportant=pi.checked;
       const dg=sc.querySelector('#dgOn');if(dg){PREF.digest={on:dg.checked,time:sc.querySelector('#dgTime').value||'08:00'};try{PREF.tz=Intl.DateTimeFormat().resolvedOptions().timeZone}catch(e){}}
       PREF.signature=sc.querySelector('#sigTxt').value.trim().slice(0,1000);
       PREF.swipeR=sc.querySelector('#swR').value;PREF.swipeL=sc.querySelector('#swL').value;
