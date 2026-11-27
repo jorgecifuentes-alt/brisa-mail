@@ -167,6 +167,8 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .rtool{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:0;background:transparent;color:var(--fg);font:500 13.5px var(--f-ui)}
 .rtool:hover{background:var(--sunk)}.rtool svg{width:18px;height:18px}.rtool.ico{padding:7px}
 @media (max-width:760px){.rtool span{display:none}.rtool{padding:8px}}
+.sendcd{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);white-space:nowrap}
+.sendcd button{border:0;background:#D3E3FD;color:#0B57D0;font:600 13px var(--f-ui);padding:4px 10px;border-radius:999px}
 .ai-draft.on{background:#D3E3FD;color:#0B57D0}
 .app:has(#replyWrap:not([hidden])) .ask-pill{display:none}
 .aiw{border-bottom:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,#D3E3FD 35%,var(--panel)),var(--panel));padding:10px 12px 10px}
@@ -1890,10 +1892,10 @@ function renderReader(){
     const last=i===m.msgs.length-1,col=!last&&!x.open;
     const at=x.attach&&x.attach.length?x.attach:(last&&m.attach?[m.attach]:[]);
     return `<article class="mcard ${col?'collapsed':''}" data-i="${i}">
-      <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x,i)}<span class="sp"></span><time>${x.pending?'Enviando…':esc(longDate(x.t))}</time></div>${rcptBox(x,i)}
+      <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x,i)}<span class="sp"></span>${x.pending&&x.sendId&&PENDING.has(x.sendId)?`<span class="sendcd"><span data-sendcd="${x.sendId}">Se envía en ${Math.max(0,Math.ceil((PENDING.get(x.sendId).until-Date.now())/1000))} s</span><button type="button" data-undosend="${x.sendId}">Deshacer</button></span>`:`<time>${x.pending?'Enviando…':esc(longDate(x.t))}</time>`}</div>${rcptBox(x,i)}
       ${col?`<div class="mprev" data-expandmsg>${esc(plain(x.text.join(' ')))}</div>`:`<div class="mbody">${x.text.map(p=>`<p>${p}</p>`).join('')}</div>
       ${at.length?`<div class="atts"><div class="atts-h">${ic.clip}<span>${at.length===1?'1 adjunto':at.length+' adjuntos'}</span></div><div class="ftiles">${at.map((a,k)=>caps.server&&x.id?`<a class="libfile" href="/api/attachment?m=${encodeURIComponent(x.id)}&i=${k}&n=${encodeURIComponent(a.name||a)}" target="_blank" rel="noopener" title="Abrir">${fileTile(a)}</a>`:fileTile(a)).join('')}</div></div>`:''}
-      ${last&&!m.sent?`<div class="qrow"><button class="aiq" data-awopen title="Redactar respuesta con IA">+ai</button>${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
+      ${last&&!m.sent&&!x.sent&&!(x.from&&x.from.me)?`<div class="qrow"><button class="aiq" data-awopen title="Redactar respuesta con IA">+ai</button>${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
     </article>`}).join('');
   else if(m.bodyErr)msgsH=`<div class="errbox"><b>No se pudo abrir el correo</b><p>${esc(errText(m.bodyErr))}</p><div class="row-btns"><button class="send" data-retrybody>Reintentar</button></div></div>`;
   else msgsH=`<article class="mcard"><div class="mhead">${avatar(m.from)}<b class="mfrom">${esc(m.from.name)}</b><span class="sp"></span><time>${esc(longDate(time(m)))}</time></div><div class="mbody"><p>${esc(m.snippet)}</p><p class="hint">Cargando el mensaje completo…</p></div></article>`;
@@ -2442,11 +2444,21 @@ function addFollow(o){
 const FOLLOW_SEL=id=>`<select id="${id}" class="rfollow" aria-label="Recordarme si no responden"><option value="0">⏰ Sin recordatorio</option><option value="1">⏰ Si no responden en 1 día</option><option value="2">⏰ … en 2 días</option><option value="7">⏰ … en 1 semana</option></select>`;
 
 /* Envío con 5 s para deshacer */
+// Envío con 20 segundos para deshacer. La cuenta regresiva se ve en el aviso y en el mensaje mismo.
+const UNDO_MS=20000,PENDING=new Map();let sendSeq=0;
 function queueSend(label,doIt,cancel){
-  let cancelled=false;
-  toast(label,()=>{cancelled=true;cancel()},5000);
-  setTimeout(()=>{if(!cancelled)doIt()},5000);
+  const id=++sendSeq,until=Date.now()+UNDO_MS;
+  const p={until,label,cancel:()=>{if(!PENDING.has(id))return;PENDING.delete(id);clearTimeout(p.t);cancel();renderAll();toast('Envío cancelado')}};
+  p.t=setTimeout(()=>{if(!PENDING.has(id))return;PENDING.delete(id);doIt()},UNDO_MS);
+  PENDING.set(id,p);
+  const left=()=>Math.max(0,Math.ceil((until-Date.now())/1000));
+  toast(`${label} en ${left()} s`,()=>p.cancel(),UNDO_MS);
+  const tick=setInterval(()=>{if(!PENDING.has(id)){clearInterval(tick);return}
+    const t=$('#layer').querySelector('.toast span');if(t&&t.textContent.startsWith(label))t.textContent=`${label} en ${left()} s`;
+    document.querySelectorAll(`[data-sendcd="${id}"]`).forEach(el=>el.textContent=`Se envía en ${left()} s`)},500);
+  return id;
 }
+document.addEventListener('click',e=>{const u=e.target.closest('[data-undosend]');if(!u)return;e.stopPropagation();const p=PENDING.get(+u.dataset.undosend);if(p)p.cancel()},true);
 function withSig(body,on){return on&&PREF.signature?body+'\n\n-- \n'+PREF.signature:body}
 function sendReply(){
   const m=getMail(S.sel);const box=$('#replyBox');if(!m||!box)return;
@@ -2461,18 +2473,20 @@ function sendReply(){
   const fDays=+(($('#rFollow')||{}).value||0),rTo=m.sent?m.to:m.from;
   const files=(RS.files||[]).slice();
   const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true,to:RS.to.concat(RS.cc),toL:RS.to.slice(),ccL:RS.cc.slice(),attach:files.map(f=>({name:f.name,size:fmtB(f.size)}))};
-  RS.files=[];RS.big=false;
+  const rsPrev=JSON.parse(JSON.stringify(RS));
+  // Enviado: se cierra el cuadro (no queda un borrador nuevo abierto).
+  RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false,files:[],big:false};AW.open=false;S.replyOpen=null;
   m.msgs.push(msg);box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
-  renderReader();
-  const undo=()=>{const i=m.msgs.indexOf(msg);if(i>=0)m.msgs.splice(i,1);if(S.sel===m.id){renderReader();const b=$('#replyBox');if(b)b.value=raw}};
-  queueSend('Enviando respuesta…',async()=>{
+  const undo=()=>{const i=m.msgs.indexOf(msg);if(i>=0)m.msgs.splice(i,1);RS=rsPrev;S.replyOpen=m.id;try{sessionStorage.setItem('brisa-reply-'+m.id,raw)}catch(e){}if(S.sel===m.id){renderReader();const b=$('#replyBox');if(b){b.value=raw;b.focus()}}};
+  msg.sendId=queueSend('Enviando respuesta',async()=>{
     try{
       if(m.gm){const target=[...m.msgs].reverse().find(x=>x.id&&!x.sent)||[...m.msgs].reverse().find(x=>x.id);
         await gcall('reply',caps.server?{messageId:target.id,body,replyAll:mode==='all',...rcp,attachments:attPayload(files)}:{messageId:target.id,body,replyAll:mode==='all'});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
-      msg.pending=false;if(S.sel===m.id)renderReader();toast('Respuesta enviada');
+      msg.pending=false;msg.sendId=null;if(S.sel===m.id)renderReader();toast('Respuesta enviada');
       if(fDays&&rTo)addFollow({to:rTo.email,toName:rTo.name,subject:m.subject,days:fDays});
     }catch(e){undo();toast(errText(e)+' Tu respuesta quedó en el borrador.',null,8000)}
   },undo);
+  renderReader();
 }
 
 function sendForward(m,box,raw){
@@ -2482,7 +2496,7 @@ function sendForward(m,box,raw){
   box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
   RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false,files:[],big:false};S.replyOpen=null;renderReader();
   const back=()=>{try{sessionStorage.setItem('brisa-reply-'+m.id,raw)}catch(e){}};
-  queueSend('Reenviando…',async()=>{
+  queueSend('Reenviando',async()=>{
     try{
       if(m.gm&&caps.server&&tgt.id){const r=await gcall('forward',{messageId:tgt.id,body,...rcp,attachments:attPayload(files)});const na=(r&&r.attachments||0)+files.length;toast('Reenviado'+(na?` con ${na===1?'1 adjunto':na+' adjuntos'}`:''))}
       else if(m.gm){const q='\n\n---------- Mensaje reenviado ----------\nDe: '+(last.from?last.from.name+' <'+(last.from.email||'')+'>':'')+'\nAsunto: '+m.subject+'\n\n'+plain((last.text||[]).join('\n\n'));
@@ -2551,13 +2565,13 @@ function openCompose(pre={}){
       return;
     }
     if(gm){
-      queueSend('Enviando…',async()=>{
+      queueSend('Enviando',async()=>{
         try{await gcall('send_message',{to,subject,body,...(cFiles.length?{attachments:attPayload(cFiles)}:{})});try{await caps.mcp.invalidate('Gmail')}catch(e){}toast('Mensaje enviado');if(S.folder==='sent')loadFolder('sent',true);if(follow)addFollow({to:to[0],subject,days:follow})}
         catch(e){restoreDraft();toast(errText(e)+' Tu mensaje quedó guardado como borrador.',null,8000)}
       },()=>{restoreDraft();openCompose()});
     }else{
       const m={id:'d'+(++seq),cat:'people',sent:true,from:{name:'Yo',email:ME.email,me:true},to:parseAddr(to[0]),subject,msgs:[{from:{name:'Yo',email:ME.email,me:true},t:when,text:toParas(body||' ')}]};
-      queueSend(w==='0'?'Enviando…':'Se enviará '+longDate(when),()=>{mails.push(m);renderAll();toast(w==='0'?'Mensaje enviado (ejemplo)':'Programado (ejemplo)')},()=>{restoreDraft();openCompose()});
+      queueSend(w==='0'?'Enviando':'Programando',()=>{mails.push(m);renderAll();toast(w==='0'?'Mensaje enviado (ejemplo)':'Programado (ejemplo)')},()=>{restoreDraft();openCompose()});
     }
   };
 }
