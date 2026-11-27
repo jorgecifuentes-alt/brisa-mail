@@ -153,6 +153,20 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .reply{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
 .reply:focus-within{border-color:var(--accent)}
 .reply textarea{width:100%;border:0;resize:vertical;min-height:84px;padding:12px 14px;background:transparent;color:var(--fg);font:15px/1.5 var(--f-ui);outline:none}
+.reply.big{position:fixed;z-index:55;left:50%;top:50%;transform:translate(-50%,-50%);width:min(860px,94vw);height:min(86vh,780px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgb(0 0 0 / .3);border-radius:16px}
+.reply.big textarea{flex:1;resize:none;min-height:0;font-size:16px}
+.reply.big .rhead{max-height:40%;overflow:auto}
+.reply-scrim{position:fixed;inset:0;z-index:54;background:rgb(0 0 0 / .35)}
+@media (max-width:760px){.reply.big{inset:0;left:0;top:0;transform:none;width:auto;height:auto;border-radius:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
+.rchip{cursor:pointer}.rchip:focus-visible{outline:2px solid var(--accent,#0B57D0)}.rchip.drag{opacity:.4}
+.rc-chips.over{background:#E8F0FE;border-radius:8px;outline:1.5px dashed #0B57D0}
+.rfiles{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}.rfiles:empty{display:none}.rfiles{padding-bottom:8px}
+.rfile{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 4px 5px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:13px}
+.rfile svg{width:15px;height:15px;color:var(--muted);flex:none}.rfile b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}.rfile small{color:var(--muted)}
+.rfile button{width:22px;height:22px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:16px;display:grid;place-items:center}
+.rtool{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:0;background:transparent;color:var(--fg);font:500 13.5px var(--f-ui)}
+.rtool:hover{background:var(--sunk)}.rtool svg{width:18px;height:18px}.rtool.ico{padding:7px}
+@media (max-width:760px){.rtool span{display:none}.rtool{padding:8px}}
 .rhead{border-bottom:1px solid var(--line);padding:8px 10px 4px;display:flex;flex-direction:column;gap:2px}
 .rmodes{display:flex;gap:6px;padding-bottom:6px;flex-wrap:wrap}
 .rm{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font:500 13.5px var(--f-ui)}
@@ -1050,6 +1064,8 @@ const ic={
   mailI:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
   circle:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
   reply:'<svg class="i" viewBox="0 0 24 24"><path d="M10 8l-5 5 5 5M5 13h9a5 5 0 015 5v1"/></svg>',
+  expand:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
+  shrink:'<svg class="i" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
   replyAll:'<svg class="i" viewBox="0 0 24 24"><path d="M7 8l-5 5 5 5M12 8l-5 5 5 5M7 13h9a5 5 0 015 5v1"/></svg>',
   fwd:'<svg class="i" viewBox="0 0 24 24"><path d="M14 8l5 5-5 5M19 13H8a5 5 0 00-5 5v1"/></svg>',
   chevR:'<svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
@@ -1159,7 +1175,7 @@ const PREF={signature:'',templates:[
   {name:'Agendar reunión',body:'Hola, ¿te acomoda conversarlo esta semana? Tengo disponibilidad el martes o el jueves entre 10:00 y 12:00.'},
   {name:'Agradecimiento',body:'¡Muchas gracias! Lo reviso y te escribo pronto.'}],snoozes:{}};
 const AI={sum:{},map:{}};
-let RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false}; // destinatarios del cuadro de respuesta
+let RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false,files:[],big:false}; // cuadro de respuesta: modo, destinatarios, adjuntos, ampliado
 // Rol del asistente (editable en Ajustes). Se usa en el asistente de Brisa y al "Pedir a Claude".
 const AI_ROLE_DEFAULT=`Rol: eres mi Asistente Ejecutivo de alto nivel. Gestionas mi flujo de información (correos, reuniones, calendario y contactos) con eficiencia, seguridad y proactividad.
 Capacidades: analizar hilos, redactar borradores con mi estilo, buscar información histórica y organizar la bandeja; programar eventos, ver disponibilidad y resolver conflictos de horario; resumir reuniones y extraer puntos de acción; recordar mis preferencias y datos clave.
@@ -1876,10 +1892,11 @@ function renderReader(){
       ${((su&&su>Date.now())||m.trash)?`<div class="meta-tags">${su&&su>Date.now()?`<span class="tag snz">Vuelve ${esc(longDate(su))}</span>`:''}${m.trash?'<span class="tag">En papelera</span>':''}</div>`:''}
       ${aiCards(m.id)}
       ${msgsH}
-      <div class="reply" id="replyWrap" ${open?'':'hidden'}>${replyHead(m)}<textarea id="replyBox" placeholder="${RS.mode==='fwd'?'Agrega un mensaje (opcional)…':'Escribe tu respuesta…'}"></textarea>
+      ${RS.big&&RS.id===m.id&&open?'<div class="reply-scrim" data-rbig></div>':''}<div class="reply ${RS.big&&RS.id===m.id?'big':''}" id="replyWrap" ${open?'':'hidden'}>${replyHead(m)}<textarea id="replyBox" placeholder="${RS.mode==='fwd'?'Agrega un mensaje (opcional)…':'Escribe tu respuesta…'}"></textarea>
         <div class="dict-partial" id="dp-reply" hidden></div>
-        <div class="reply-foot">${micBtn('reply')}${caps.sample&&!aiOff?`<button class="ghost ai-draft" data-ai="draft" title="Escribe una idea y la IA redacta la respuesta">${ic.spark}<span>Redactar con IA</span></button>`:''}${tplSelect('replyTpl')}
-          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}${caps.server&&S.mode==='gmail'?FOLLOW_SEL('rFollow'):''}<small></small><button class="send" data-act="send">${RS.mode==='fwd'?'Reenviar':'Enviar'}</button></div></div>
+        <div class="rfiles" id="rFiles">${filesHTML(RS.files)}</div>
+        <div class="reply-foot">${caps.server?`<button type="button" class="rtool" data-ratt title="Adjuntar archivos">${ic.clip}<span>Adjuntar</span></button>`:''}${micBtn('reply')}${caps.sample&&!aiOff?`<button class="ghost ai-draft" data-ai="draft" title="Escribe una idea y la IA redacta la respuesta">${ic.spark}<span>Redactar con IA</span></button>`:''}${tplSelect('replyTpl')}
+          ${PREF.signature?`<label class="sig"><input type="checkbox" id="sigOn" checked> Firma</label>`:''}${caps.server&&S.mode==='gmail'?FOLLOW_SEL('rFollow'):''}<span class="sp"></span><button type="button" class="rtool ico" data-rbig title="${RS.big?'Achicar':'Ampliar (doble clic)'}" aria-label="${RS.big?'Achicar':'Ampliar'}">${RS.big?ic.shrink:ic.expand}</button><button type="button" class="rtool ico" data-rdiscard title="Descartar borrador" aria-label="Descartar borrador">${ic.trash}</button><small></small><button class="send" data-act="send">${RS.mode==='fwd'?'Reenviar':'Enviar'}</button></div></div>
     </div>${ask}`;
   const rb=$('#replyBox');if(rb&&draft)rb.value=draft;
 }
@@ -1902,14 +1919,14 @@ function replyDefaults(m,mode){
 function openReply(focus=true,mode){
   const m=getMail(S.sel);if(!m)return;
   const b0=$('#replyBox');if(b0&&b0.value){try{sessionStorage.setItem('brisa-reply-'+m.id,b0.value)}catch(e){}}
-  if(mode||RS.id!==m.id){const md=mode||'reply';RS=Object.assign({id:m.id,mode:md,showCc:md==='all'},replyDefaults(m,md));if(md==='fwd')RS.showCc=false}
+  if(mode||RS.id!==m.id){const md=mode||'reply',keep=RS.id===m.id?{files:RS.files||[],big:!!RS.big}:{files:[],big:false};RS=Object.assign({id:m.id,mode:md,showCc:md==='all'},replyDefaults(m,md),keep)}
   S.replyOpen=m.id;renderReader();
   const w=$('#replyWrap');if(w){w.hidden=false;w.scrollIntoView({block:isMob()?'start':'nearest',behavior:'smooth'})}
   if(focus){const t=RS.mode==='fwd'&&!RS.to.length?$('#rcIn-to'):$('#replyBox');t&&t.focus({preventScroll:true})}
 }
-const chipList=(f)=>`<div class="rc-chips" data-rf="${f}">${RS[f].map((a,k)=>`<span class="rchip" title="${esc(a.email)}">${esc(a.name&&a.name!==a.email?a.name:a.email)}<button type="button" data-rcdel="${f}:${k}" aria-label="Quitar ${esc(a.name||a.email)}">×</button></span>`).join('')}<input id="rcIn-${f}" class="rc-in" list="rcPeople" type="email" inputmode="email" autocomplete="off" placeholder="${RS[f].length?'':'Agregar correo'}" aria-label="Agregar destinatario en ${f==='to'?'Para':f.toUpperCase()}"></div>`;
+const chipList=(f)=>`<div class="rc-chips" data-rf="${f}">${RS[f].map((a,k)=>`<span class="rchip" draggable="true" data-rchip="${f}:${k}" tabindex="0" role="button" title="${esc(a.email)} · toca para mover a Para, CC o CCO">${esc(a.name&&a.name!==a.email?a.name:a.email)}<button type="button" data-rcdel="${f}:${k}" aria-label="Quitar ${esc(a.name||a.email)}">×</button></span>`).join('')}<input id="rcIn-${f}" class="rc-in" list="rcPeople" type="email" inputmode="email" autocomplete="off" placeholder="${RS[f].length?'':'Agregar correo'}" aria-label="Agregar destinatario en ${f==='to'?'Para':f.toUpperCase()}"></div>`;
 function replyHead(m){
-  if(RS.id!==m.id)RS=Object.assign({id:m.id,mode:'reply',showCc:false},replyDefaults(m,'reply'));
+  if(RS.id!==m.id)RS=Object.assign({id:m.id,mode:'reply',showCc:false,files:[],big:false},replyDefaults(m,'reply'));
   const md=RS.mode,tab=(k,l,i)=>`<button type="button" class="rm ${md===k?'on':''}" data-rmode="${k}" aria-pressed="${md===k}">${i}<span>${l}</span></button>`;
   const people=new Map();(S.mode==='demo'?mails:Object.values(G.map)).forEach(x=>[x.from,x.to].concat(x.msgs?x.msgs.flatMap(y=>[y.from,...(y.to||[])]):[]).forEach(a=>{if(addrOk(a)&&!a.me)people.set(a.email.toLowerCase(),a)}));
   const fwdSrc=[...(m.msgs||[])].reverse().find(x=>x.id&&!x.pending)||{},fwdAtt=md==='fwd'?(fwdSrc.attach&&fwdSrc.attach.length?fwdSrc.attach:(m.attach?[m.attach]:[])):[];
@@ -1919,6 +1936,46 @@ function replyHead(m){
     ${md==='fwd'?`<div class="rf-note">${ic.fwd}<span>Se reenvía «${esc(m.subject||'')}»${fwdAtt.length?` con ${fwdAtt.length===1?'su adjunto':'sus '+fwdAtt.length+' adjuntos'}`:''}.</span></div>`:''}
     <datalist id="rcPeople">${[...people.values()].slice(0,300).map(a=>`<option value="${esc(a.email)}">${esc(a.name||'')}</option>`).join('')}</datalist></div>`;
 }
+const FLAB={to:'Para',cc:'CC',bcc:'CCO'};
+function rcMove(from,k,to){const a=RS[from][k];if(!a||from===to)return;RS[from].splice(k,1);RS[to]=uniqA(RS[to].concat(a));if(to!=='to')RS.showCc=true;rcRedraw()}
+function chipMenu(chip){
+  const [f,k]=chip.dataset.rchip.split(':'),a=RS[f][+k];if(!a)return;
+  const it=['to','cc','bcc'].filter(x=>x!==f).map(x=>['Mover a '+FLAB[x],x==='to'?ic.reply:ic.person,()=>rcMove(f,+k,x)]);
+  it.push(['Copiar '+a.email,ic.copy,()=>copy(a.email)],['Quitar',ic.trash,()=>{RS[f].splice(+k,1);rcRedraw()}]);
+  menuAt(chip,it);
+}
+const fmtB=n=>n>1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' KB';
+const filesHTML=l=>(l||[]).map((f,i)=>`<span class="rfile">${ic.clip}<b>${esc(f.name)}</b><small>${fmtB(f.size)}</small><button type="button" data-rfdel="${i}" aria-label="Quitar ${esc(f.name)}">×</button></span>`).join('');
+const MAXATT=20*1048576;
+function pickFiles(onDone){
+  const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.style.display='none';document.body.appendChild(inp);
+  inp.onchange=async()=>{const fs=[...inp.files];inp.remove();const out=[];
+    for(const f of fs){out.push(await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r({name:f.name,size:f.size,type:f.type||'application/octet-stream',data:String(rd.result).split(',')[1]||''});rd.onerror=()=>r(null);rd.readAsDataURL(f)}))}
+    onDone(out.filter(Boolean))};
+  inp.click();
+}
+function addFiles(list,add){const tot=list.concat(add).reduce((n,f)=>n+f.size,0);if(tot>MAXATT){toast('Los adjuntos superan 20 MB en total. Gmail no los aceptaría.');return list}return list.concat(add)}
+const attPayload=l=>(l||[]).map(f=>({filename:f.name,contentType:f.type,data:f.data}));
+function setBig(on){RS.big=!!on;const box=$('#replyBox'),v=box?box.value:'';const m=getMail(S.sel);if(m&&v){try{sessionStorage.setItem('brisa-reply-'+m.id,v)}catch(e){}}
+  renderReader();const b=$('#replyBox');if(b){if(v)b.value=v;b.focus({preventScroll:true})}if(!on){const w=$('#replyWrap');w&&w.scrollIntoView({block:'nearest'})}}
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-rbig]')){setBig(!RS.big);return}
+  if(e.target.closest('[data-ratt]')){pickFiles(fs=>{RS.files=addFiles(RS.files||[],fs);const el=$('#rFiles');if(el)el.innerHTML=filesHTML(RS.files)});return}
+  const fd=e.target.closest('[data-rfdel]');if(fd){RS.files.splice(+fd.dataset.rfdel,1);const el=$('#rFiles');if(el)el.innerHTML=filesHTML(RS.files);return}
+  if(e.target.closest('[data-rdiscard]')){const m=getMail(S.sel);if(!m)return;const b=$('#replyBox'),prev={v:b?b.value:'',rs:JSON.parse(JSON.stringify(RS))};
+    try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(err){}RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false,files:[],big:false};S.replyOpen=null;renderReader();
+    toast('Borrador descartado',()=>{RS=prev.rs;S.replyOpen=m.id;renderReader();const b2=$('#replyBox');if(b2)b2.value=prev.v});return}
+  const ch=e.target.closest('[data-rchip]');if(ch&&!e.target.closest('[data-rcdel]')){e.stopPropagation();chipMenu(ch);return}
+},true);
+// Doble clic (o doble toque) en el cuadro: ampliarlo como ventana al centro.
+document.addEventListener('dblclick',e=>{const w=e.target.closest('#replyWrap');if(!w||e.target.closest('textarea,input,select,button,.rchip'))return;e.preventDefault();setBig(!RS.big)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&RS.big&&$('#replyWrap.big')){e.stopPropagation();setBig(false)}},true);
+// Arrastrar un nombre de un campo a otro (computador).
+document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('[data-rchip]');if(!c)return;e.dataTransfer.setData('text/brisa-chip',c.dataset.rchip);e.dataTransfer.effectAllowed='move';c.classList.add('drag')});
+document.addEventListener('dragend',e=>{document.querySelectorAll('.rchip.drag,.rc-chips.over').forEach(x=>x.classList.remove('drag','over'))});
+document.addEventListener('dragover',e=>{const z=e.target.closest&&e.target.closest('.rc-chips');if(!z||!e.dataTransfer.types.includes('text/brisa-chip'))return;e.preventDefault();z.classList.add('over')});
+document.addEventListener('dragleave',e=>{const z=e.target.closest&&e.target.closest('.rc-chips');if(z&&!z.contains(e.relatedTarget))z.classList.remove('over')});
+document.addEventListener('drop',e=>{const z=e.target.closest&&e.target.closest('.rc-chips');const d=e.dataTransfer&&e.dataTransfer.getData('text/brisa-chip');if(!z||!d)return;e.preventDefault();const [f,k]=d.split(':');rcMove(f,+k,z.dataset.rf)});
 function rcCommit(f,input){
   const raw=String(input.value||'').trim();if(!raw)return true;
   const parts=raw.split(/[,;\s]+/).filter(Boolean);let bad=[];
@@ -1932,7 +1989,7 @@ function rcRedraw(focusF){const w=$('#replyWrap');if(!w)return;const box=$('#rep
   const sb=w.querySelector('[data-act="send"]');if(sb)sb.textContent=RS.mode==='fwd'?'Reenviar':'Enviar';
   if(focusF){const i=$('#rcIn-'+focusF);i&&i.focus()}}
 document.addEventListener('click',e=>{
-  const md=e.target.closest('[data-rmode]');if(md){const m=getMail(S.sel);if(!m)return;const k=md.dataset.rmode;RS=Object.assign({id:m.id,mode:k,showCc:k==='all'},replyDefaults(m,k));rcRedraw(k==='fwd'?'to':null);return}
+  const md=e.target.closest('[data-rmode]');if(md){const m=getMail(S.sel);if(!m)return;const k=md.dataset.rmode;RS=Object.assign({id:m.id,mode:k,showCc:k==='all'},replyDefaults(m,k),{files:RS.files||[],big:!!RS.big});rcRedraw(k==='fwd'?'to':null);return}
   const dl=e.target.closest('[data-rcdel]');if(dl){const [f,k]=dl.dataset.rcdel.split(':');RS[f].splice(+k,1);rcRedraw(f);return}
   if(e.target.closest('[data-rcmore]')){RS.showCc=true;rcRedraw('cc');return}
   const ch=e.target.closest('.rc-chips');if(ch&&e.target===ch){const i=ch.querySelector('.rc-in');i&&i.focus()}
@@ -2291,14 +2348,16 @@ function sendReply(){
   const rcp={to:RS.to.map(a=>a.email),cc:RS.cc.map(a=>a.email),bcc:RS.bcc.map(a=>a.email)};
   const body=withSig(raw,$('#sigOn')?$('#sigOn').checked:false);
   const fDays=+(($('#rFollow')||{}).value||0),rTo=m.sent?m.to:m.from;
-  const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true,to:RS.to.concat(RS.cc),toL:RS.to.slice(),ccL:RS.cc.slice()};
+  const files=(RS.files||[]).slice();
+  const msg={from:{name:'Yo',email:'',me:true},t:Date.now(),text:toParas(body),pending:true,sent:true,to:RS.to.concat(RS.cc),toL:RS.to.slice(),ccL:RS.cc.slice(),attach:files.map(f=>({name:f.name,size:fmtB(f.size)}))};
+  RS.files=[];RS.big=false;
   m.msgs.push(msg);box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
   renderReader();
   const undo=()=>{const i=m.msgs.indexOf(msg);if(i>=0)m.msgs.splice(i,1);if(S.sel===m.id){renderReader();const b=$('#replyBox');if(b)b.value=raw}};
   queueSend('Enviando respuesta…',async()=>{
     try{
       if(m.gm){const target=[...m.msgs].reverse().find(x=>x.id&&!x.sent)||[...m.msgs].reverse().find(x=>x.id);
-        await gcall('reply',caps.server?{messageId:target.id,body,replyAll:mode==='all',...rcp}:{messageId:target.id,body,replyAll:mode==='all'});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
+        await gcall('reply',caps.server?{messageId:target.id,body,replyAll:mode==='all',...rcp,attachments:attPayload(files)}:{messageId:target.id,body,replyAll:mode==='all'});try{await caps.mcp.invalidate('Gmail')}catch(e){}}
       msg.pending=false;if(S.sel===m.id)renderReader();toast('Respuesta enviada');
       if(fDays&&rTo)addFollow({to:rTo.email,toName:rTo.name,subject:m.subject,days:fDays});
     }catch(e){undo();toast(errText(e)+' Tu respuesta quedó en el borrador.',null,8000)}
@@ -2308,13 +2367,13 @@ function sendReply(){
 function sendForward(m,box,raw){
   const body=withSig(raw,$('#sigOn')?$('#sigOn').checked:false);
   const rcp={to:RS.to.map(a=>a.email),cc:RS.cc.map(a=>a.email),bcc:RS.bcc.map(a=>a.email)};
-  const tgt=[...(m.msgs||[])].reverse().find(x=>x.id&&!x.pending)||{},last=tgt.text?tgt:((m.msgs||[]).slice(-1)[0]||{});
+  const tgt=[...(m.msgs||[])].reverse().find(x=>x.id&&!x.pending)||{},last=tgt.text?tgt:((m.msgs||[]).slice(-1)[0]||{});const files=(RS.files||[]).slice();
   box.value='';try{sessionStorage.removeItem('brisa-reply-'+m.id)}catch(e){}
-  RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false};S.replyOpen=null;renderReader();
+  RS={id:null,mode:'reply',to:[],cc:[],bcc:[],showCc:false,files:[],big:false};S.replyOpen=null;renderReader();
   const back=()=>{try{sessionStorage.setItem('brisa-reply-'+m.id,raw)}catch(e){}};
   queueSend('Reenviando…',async()=>{
     try{
-      if(m.gm&&caps.server&&tgt.id){const r=await gcall('forward',{messageId:tgt.id,body,...rcp});toast('Reenviado'+(r&&r.attachments?` con ${r.attachments===1?'1 adjunto':r.attachments+' adjuntos'}`:''))}
+      if(m.gm&&caps.server&&tgt.id){const r=await gcall('forward',{messageId:tgt.id,body,...rcp,attachments:attPayload(files)});const na=(r&&r.attachments||0)+files.length;toast('Reenviado'+(na?` con ${na===1?'1 adjunto':na+' adjuntos'}`:''))}
       else if(m.gm){const q='\n\n---------- Mensaje reenviado ----------\nDe: '+(last.from?last.from.name+' <'+(last.from.email||'')+'>':'')+'\nAsunto: '+m.subject+'\n\n'+plain((last.text||[]).join('\n\n'));
         await gcall('send_message',{to:rcp.to,cc:rcp.cc,bcc:rcp.bcc,subject:'Fwd: '+m.subject,body:body+q});toast('Reenviado (sin adjuntos)')}
       else toast('Reenviado (ejemplo)');
@@ -2341,13 +2400,17 @@ function openCompose(pre={}){
     <div class="err" id="cErr" hidden></div>
     <textarea id="cBody" aria-label="Mensaje" placeholder="Escribe tu mensaje…"></textarea>
     <div class="dict-partial" id="dp-compose" hidden></div>
+    <div class="rfiles" id="cFiles"></div>
     <footer>
-      ${micBtn('compose')}${tplSelect('cTpl')}
+      ${caps.server?`<button type="button" class="rtool" id="cAtt" title="Adjuntar archivos">${ic.clip}<span>Adjuntar</span></button>`:''}${micBtn('compose')}${tplSelect('cTpl')}
       ${!gm||caps.server?`<select id="cWhen" aria-label="Cuándo enviar"><option value="0">Enviar ahora</option><option value="60">En 1 hora</option><option value="tm">Mañana a las 8:00</option><option value="mon">El lunes a las 8:00</option>${caps.server?'<option value="pick">Elegir fecha y hora…</option>':''}</select><input type="datetime-local" id="cAt" aria-label="Fecha y hora de envío" hidden>`:''}
       ${gm&&caps.server?FOLLOW_SEL('cFollow'):''}
       <span class="sp"></span><button class="ghost" data-x>Descartar</button><button class="send" id="cSend">Enviar</button>
     </footer>`);
   const cTo=sc.querySelector('#cTo'),cSub=sc.querySelector('#cSub'),cBody=sc.querySelector('#cBody');
+  let cFiles=[];const drawCF=()=>{sc.querySelector('#cFiles').innerHTML=filesHTML(cFiles).replace(/data-rfdel/g,'data-cfdel')};
+  const ca=sc.querySelector('#cAtt');if(ca)ca.onclick=()=>pickFiles(fs=>{cFiles=addFiles(cFiles,fs);drawCF()});
+  sc.addEventListener('click',e=>{const d=e.target.closest('[data-cfdel]');if(d){cFiles.splice(+d.dataset.cfdel,1);drawCF()}});
   let draft=null;try{draft=JSON.parse(localStorage.getItem('brisa-draft')||'null')}catch(e){}
   if(pre.body!==undefined)cBody.value=pre.body+(PREF.signature?'\n\n-- \n'+PREF.signature:'');
   else if(draft&&!pre.to){cTo.value=draft.to||'';cSub.value=draft.sub||'';cBody.value=draft.body||''}
@@ -2366,6 +2429,7 @@ function openCompose(pre={}){
     let when=Date.now();if(w==='60')when+=H;if(w==='tm'){const t=new Date();t.setDate(t.getDate()+1);t.setHours(8,0,0,0);when=t.getTime()}
     if(w==='mon'){const t=new Date();t.setDate(t.getDate()+((8-t.getDay())%7||7));t.setHours(8,0,0,0);when=t.getTime()}
     if(w==='pick'){when=new Date(sc.querySelector('#cAt').value).getTime();if(!(when>Date.now()+60000)){err.textContent='Elige una fecha y hora futuras para el envío.';err.hidden=false;return}}
+    if(cFiles.length&&w!=='0'){err.textContent='Los correos con adjuntos se envían al tiro. Elige "Enviar ahora" o quita los adjuntos.';err.hidden=false;return}
     const subject=cSub.value.trim()||'(sin asunto)',body=cBody.value.trim();
     try{localStorage.removeItem('brisa-draft')}catch(e){}
     sc.remove();
@@ -2377,7 +2441,7 @@ function openCompose(pre={}){
     }
     if(gm){
       queueSend('Enviando…',async()=>{
-        try{await gcall('send_message',{to,subject,body});try{await caps.mcp.invalidate('Gmail')}catch(e){}toast('Mensaje enviado');if(S.folder==='sent')loadFolder('sent',true);if(follow)addFollow({to:to[0],subject,days:follow})}
+        try{await gcall('send_message',{to,subject,body,...(cFiles.length?{attachments:attPayload(cFiles)}:{})});try{await caps.mcp.invalidate('Gmail')}catch(e){}toast('Mensaje enviado');if(S.folder==='sent')loadFolder('sent',true);if(follow)addFollow({to:to[0],subject,days:follow})}
         catch(e){restoreDraft();toast(errText(e)+' Tu mensaje quedó guardado como borrador.',null,8000)}
       },()=>{restoreDraft();openCompose()});
     }else{
