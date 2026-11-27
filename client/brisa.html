@@ -167,6 +167,16 @@ kbd{font:500 11px var(--f-mono);border:1px solid var(--line);border-bottom-width
 .rtool{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:0;background:transparent;color:var(--fg);font:500 13.5px var(--f-ui)}
 .rtool:hover{background:var(--sunk)}.rtool svg{width:18px;height:18px}.rtool.ico{padding:7px}
 @media (max-width:760px){.rtool span{display:none}.rtool{padding:8px}}
+.ti.on-aside{color:#1A73E8}
+.aside-pill{position:absolute;left:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:7;display:flex;align-items:center;gap:8px;padding:8px 16px 8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);box-shadow:0 4px 16px rgb(0 0 0 / .12);color:var(--fg);font:500 14px var(--f-ui)}
+.aside-pill .stack{margin:0}
+@media (max-width:760px){.aside-pill{bottom:calc(30px + env(safe-area-inset-bottom,0px))}}
+.aside-tip{position:fixed;left:24px;bottom:90px;z-index:70;width:min(340px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgb(0 0 0 / .2);padding:18px 20px 8px}
+.aside-tip h3{margin:0 0 12px;font:700 22px var(--f-ui)}
+.aside-tip .x{position:absolute;right:10px;top:10px}
+.aside-tip p{display:flex;gap:14px;align-items:center;margin:0 0 14px;font-size:15px;line-height:1.4}
+.aside-tip .ai1,.aside-tip .ai2{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;border:2px solid #1A73E8;color:#1A73E8}
+.aside-tip .ai2{border-radius:8px}.aside-tip svg{width:22px;height:22px}
 .sendcd{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);white-space:nowrap}
 .sendcd button{border:0;background:#D3E3FD;color:#0B57D0;font:600 13px var(--f-ui);padding:4px 10px;border-radius:999px}
 .ai-draft.on{background:#D3E3FD;color:#0B57D0}
@@ -1093,6 +1103,7 @@ const ic={
   mailI:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
   circle:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
   reply:'<svg class="i" viewBox="0 0 24 24"><path d="M10 8l-5 5 5 5M5 13h9a5 5 0 015 5v1"/></svg>',
+  aside:'<svg class="i" viewBox="0 0 24 24"><path d="M17 7L7 17M7 9v8h8"/></svg>',
   expand:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
   shrink:'<svg class="i" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>',
   replyAll:'<svg class="i" viewBox="0 0 24 24"><path d="M7 8l-5 5 5 5M12 8l-5 5 5 5M7 13h9a5 5 0 015 5v1"/></svg>',
@@ -1223,6 +1234,7 @@ let dictTarget=null,dictState='idle';
 const folders=()=>[
  {id:'smart',label:'Bandeja inteligente',icon:ic.inbox},
  {id:'pinned',label:'Anclados',icon:ic.pin},
+ {id:'aside',label:'Apartados',icon:ic.aside},
  {id:'snoozed',label:'Pospuestos',icon:ic.clock},
  ...(caps.server?[{id:'follow',label:'Seguimiento',icon:ic.hourglass},{id:'sched',label:'Programados',icon:ic.schedule}]:[]),
  {id:'sent',label:'Enviados',icon:ic.send},
@@ -1233,20 +1245,24 @@ const folders=()=>[
  {id:'notes',label:'Notas de voz',icon:ic.mic},
  ...(caps.db?[{id:'team',label:'Equipo',icon:ic.team}]:[]),
 ];
+// Apartados (como en Spark): fuera de la bandeja, en una lista aparte para atender más tarde. Ctrl+G la abre.
+const isAside=m=>!!(m&&PREF.aside&&PREF.aside[m.id]);
+const asideCount=()=>Object.keys(PREF.aside||{}).length;
 const isSnoozed=m=>S.mode==='demo'?!!(m.snooze&&m.snooze>Date.now()):!!(PREF.snoozes[m.id]&&PREF.snoozes[m.id].until>Date.now());
 const snoozeUntil=m=>S.mode==='demo'?m.snooze:(PREF.snoozes[m.id]||{}).until;
 function demoIn(m,f){
-  const active=!m.trash&&!m.done&&!m.sent&&!m.blocked&&!isSnoozed(m);
-  return {smart:active,pinned:m.pinned&&!m.trash&&!m.blocked,snoozed:!m.trash&&isSnoozed(m),sent:m.sent&&!m.trash,done:m.done&&!m.trash,trash:!!m.trash}[f];
+  const active=!m.trash&&!m.done&&!m.sent&&!m.blocked&&!isSnoozed(m)&&!isAside(m);
+  return {smart:active,pinned:m.pinned&&!m.trash&&!m.blocked,aside:!m.trash&&isAside(m),snoozed:!m.trash&&isSnoozed(m),sent:m.sent&&!m.trash,done:m.done&&!m.trash,trash:!!m.trash}[f];
 }
 function gmIn(m,f){
-  if(f==='smart')return m.inInbox!==false&&!m.done&&!m.trash&&!isSnoozed(m);
+  if(f==='smart')return m.inInbox!==false&&!m.done&&!m.trash&&!isSnoozed(m)&&!isAside(m);
   if(f==='pinned')return m.pinned&&!m.trash;
   if(f==='trash')return !!m.trash;
   return !m.trash;
 }
 function listFor(f){
   if(S.mode==='demo')return mails.filter(m=>demoIn(m,f)).sort(f==='snoozed'?(a,b)=>a.snooze-b.snooze:byTime);
+  if(f==='aside')return Object.entries(PREF.aside||{}).sort((a,b)=>(b[1].at||0)-(a[1].at||0)).map(([id,s])=>G.map[id]||Object.assign(G.map[id]={},{id,gm:true,subject:s.subject,snippet:s.snippet,from:s.from,t:s.t,cat:s.cat||'people'})).filter(m=>!m.trash);
   if(f==='snoozed')return Object.values(PREF.snoozes).filter(s=>s&&s.until>Date.now()).sort((a,b)=>a.until-b.until).map(s=>G.map[s.id]||Object.assign(G.map[s.id]={},{id:s.id,gm:true,subject:s.subject,snippet:s.snippet,from:s.from,t:s.t,cat:s.cat||'people'}));
   if(f==='smart'){const ids=new Set(Object.values(G.secs).flatMap(x=>x.ids));return [...ids].map(id=>G.map[id]).filter(m=>m&&m.subject!==undefined&&gmIn(m,f)).sort(byTime)}
   return (G.lists[f]||[]).map(id=>G.map[id]).filter(m=>m&&m.subject!==undefined&&gmIn(m,f)).sort(byTime);
@@ -1302,7 +1318,7 @@ function secItems(id){
   }
   const st=G.secs[id];if(!st)return [];
   const wk=id==='all'&&byName()?weekStart():0;
-  return st.ids.map(x=>G.map[x]).filter(m=>m&&(!wk||time(m)>=wk)&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
+  return st.ids.map(x=>G.map[x]).filter(m=>m&&(!wk||time(m)>=wk)&&m.subject!==undefined&&!m.trash&&!m.done&&!isSnoozed(m)&&(['search','files','pinned'].includes(id)||!isAside(m))&&(id==='pinned'?m.pinned:(id==='search'||id==='files')?true:m.inInbox!==false)&&(['prio','all','search','files'].includes(id)||!isPrio(m))&&(id!=='seen'||!m.unread)).sort(byTime);
 }
 /* ---------- Proyectos con color ---------- */
 const PCOL=['#2F6FE4','#E5484D','#2B9348','#9C36B5','#E8742C','#0B8DA3','#C2185B','#6D4C41'];
@@ -1800,6 +1816,7 @@ function renderFilesList(L){
   L.innerHTML=h;
 }
 function renderList(){
+  setTimeout(renderAsidePill,0);
   const f=folders().find(x=>x.id===S.folder)||{label:''};
   const mailFolder=!['notes','team','files','follow','sched'].includes(S.folder);
   const srch=mailFolder&&searchActive();
@@ -1829,7 +1846,7 @@ function renderList(){
     if(S.mode==='gmail'&&G.err[S.folder]&&!(G.lists[S.folder]||[]).length){L.innerHTML=errBox(G.err[S.folder],'folder');return}
     if(S.mode==='gmail'&&G.loading[S.folder]&&!listFor(S.folder).length&&S.folder!=='snoozed'){L.innerHTML=skeleton('Cargando…');return}
     const list=listFor(S.folder);
-    const msg={pinned:['Nada anclado','Ancla un correo con el alfiler y quedará a mano.'],snoozed:['Nada pospuesto','Pospón un correo con S y volverá cuando lo necesites.'],sent:['Sin enviados','Lo que envíes aparecerá aquí.'],done:['Nada aún','Los correos marcados como hechos se guardan aquí.'],trash:['Papelera vacía','']}[S.folder];
+    const msg={pinned:['Nada anclado','Ancla un correo con el alfiler y quedará a mano.'],aside:['Nada apartado','Aparta un correo con ↙ (o la tecla G) para atenderlo más tarde sin que estorbe en la bandeja. Ctrl + G abre esta lista.'],snoozed:['Nada pospuesto','Pospón un correo con S y volverá cuando lo necesites.'],sent:['Sin enviados','Lo que envíes aparecerá aquí.'],done:['Nada aún','Los correos marcados como hechos se guardan aquí.'],trash:['Papelera vacía','']}[S.folder];
     html+=list.length?card(S.folder,'',list):`<div class="empty"><b>${msg[0]}</b>${msg[1]}</div>`;
     L.innerHTML=html;return;
   }
@@ -1921,6 +1938,7 @@ function renderReader(){
       ${ti('prio',pr?ic.bolt:ic.boltL,pr?'Quitar prioridad a este remitente (P)':'Prioridad para este remitente (P)',pr?'on-bolt':'')}
       ${ti('unread',ic.circle,'Marcar como no leído (U)')}
       ${ti('pin',m.pinned?ic.pinF:ic.pin,m.pinned?'Desanclar':'Anclar',m.pinned?'on-pin':'')}
+      ${ti('aside',ic.aside,isAside(m)?'Devolver a la bandeja (G)':'Apartar para más tarde (G)',isAside(m)?'on-aside':'')}
       ${ti('snooze',ic.clock,'Posponer (S)')}
       <button class="ti ai-t" data-aimenu title="IA: resumir, mapa mental o respuesta">+ai</button>
       <button class="ti" data-moremenu title="Más acciones" aria-label="Más acciones">${ic.more}</button>
@@ -2399,7 +2417,16 @@ function act(name,id,anchor){
     if(S.mode==='gmail')loadSmart();
     return}
   if(name==='pin'){m.pinned=!m.pinned;msg=m.pinned?'Anclado':'Desanclado';doR=m.pinned?L(['STARRED']):U(['STARRED']);undoR=m.pinned?U(['STARRED']):L(['STARRED'])}
-  else if(name==='done'){m.done=true;m.inInbox=false;m.snooze=undefined;if(g&&PREF.snoozes[T]){delete PREF.snoozes[T];savePrefs()}leaving(m);msg='Marcado como hecho';doR=U(['INBOX']);undoR=L(['INBOX'])}
+  else if(name==='aside'){
+    const was=isAside(m),prev=was?Object.assign({},PREF.aside[T]):null;PREF.aside=PREF.aside||{};
+    if(was){delete PREF.aside[T];m.inInbox=true;savePrefs();msg='De vuelta en la bandeja';doR=L(['INBOX']);undoR=U(['INBOX']);
+      renderAll();toast(msg,()=>{PREF.aside[T]=prev;m.inInbox=false;savePrefs();if(g)gRun(undoR);renderAll()});if(g)gRun(doR,()=>{PREF.aside[T]=prev;savePrefs()});if(S.mode==='gmail')loadSmart();return}
+    PREF.aside[T]={at:Date.now(),subject:m.subject,snippet:preview(m).slice(0,200),from:m.from,t:time(m),cat:m.cat};m.inInbox=false;savePrefs();leaving(m);
+    renderAll();toast('Apartado',()=>{delete PREF.aside[T];m.inInbox=true;savePrefs();if(g)gRun(L(['INBOX']));renderAll()});
+    if(g)gRun(U(['INBOX']),()=>{delete PREF.aside[T];m.inInbox=true;savePrefs();renderAll()});
+    if(!PREF.asideTip){PREF.asideTip=true;savePrefs();asideTip()}
+    return}
+  else if(name==='done'){if(PREF.aside&&PREF.aside[T]){delete PREF.aside[T];savePrefs()}m.done=true;m.inInbox=false;m.snooze=undefined;if(g&&PREF.snoozes[T]){delete PREF.snoozes[T];savePrefs()}leaving(m);msg='Marcado como hecho';doR=U(['INBOX']);undoR=L(['INBOX'])}
   else if(name==='trash'){m.trash=true;leaving(m);msg='Movido a la papelera';doR=()=>gcall('trash_thread',{threadId:T});undoR=async()=>{await gcall('untrash_thread',{threadId:T});if(s.inInbox)await gcall('label_thread',{threadId:T,labelIds:['INBOX']})}}
   else if(name==='restore'){m.trash=false;m.done=false;m.inInbox=true;msg='Restaurado en la bandeja';doR=async()=>{await gcall('untrash_thread',{threadId:T});await gcall('label_thread',{threadId:T,labelIds:['INBOX']})};undoR=()=>gcall('trash_thread',{threadId:T})}
   else if(name==='unread'){m.unread=true;S.sel=null;$('#app').classList.remove('reading');msg='Marcado como no leído';doR=L(['UNREAD']);undoR=U(['UNREAD'])}
@@ -2873,6 +2900,28 @@ window.addEventListener('brisa-refresh',()=>{if(S.mode==='gmail')loadSmart(true)
 document.addEventListener('click',e=>{const b=e.target.closest('[data-recips]');if(!b)return;e.stopPropagation();e.preventDefault();
   const box=b.closest('.mcard')&&b.closest('.mcard').querySelector('[data-rcpt="'+b.dataset.recips+'"]');if(!box)return;
   box.hidden=!box.hidden;b.setAttribute('aria-expanded',String(!box.hidden));b.classList.toggle('open',!box.hidden)},true);
+function renderAsidePill(){
+  let p=document.getElementById('asidePill');const n=asideCount();
+  if(!n||S.folder==='aside'){p&&p.remove();return}
+  if(!p){p=document.createElement('button');p.id='asidePill';p.className='aside-pill';p.title='Ver apartados (Ctrl + G)';p.onclick=()=>goFolder('aside');$('.listpane').appendChild(p)}
+  const l=listFor('aside').slice(0,3);
+  p.innerHTML=`${stackAv(l)}<span>${n} ${n===1?'apartado':'apartados'}</span>`;
+}
+function asideTip(){
+  document.getElementById('asideTip')?.remove();
+  const d=document.createElement('div');d.id='asideTip';d.className='aside-tip';d.setAttribute('role','dialog');
+  d.innerHTML=`<button class="icon-btn x" aria-label="Cerrar">${ic.x}</button><h3>¡Bien hecho!</h3>
+    <p><span class="ai1">${ic.aside}</span><span><b>1</b> correo apartado para más tarde.</span></p>
+    <p><span class="ai2">${ic.inbox}</span><span>${isPhone()?'Toca la burbuja de abajo':'Pulsa <b>Ctrl + G</b>'} para ver tu lista de <a href="#" data-goaside>Apartados</a>.</span></p>`;
+  document.body.appendChild(d);
+  d.addEventListener('click',e=>{if(e.target.closest('[data-goaside]')){e.preventDefault();d.remove();goFolder('aside');return}if(e.target.closest('.x'))d.remove()});
+  setTimeout(()=>d.remove(),9000);
+}
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==='g'){e.preventDefault();goFolder(S.folder==='aside'?'smart':'aside');return}
+  const tag=e.target.tagName;if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||e.ctrlKey||e.metaKey||e.altKey||document.querySelector('.scrim'))return;
+  if(e.key.toLowerCase()==='g'&&S.sel&&getMail(S.sel)){e.preventDefault();act('aside',S.sel)}
+});
 $('#namesBtn').onclick=()=>{
   const on=namesMode()&&PREF.namesCollapsed;
   if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
@@ -2890,13 +2939,14 @@ $('#installBtn').onclick=()=>{const d=caps.desktop;if(!d||!d.install)return;
   d.install.request().then(r=>{if(r==='installed'){installState='installed';renderNav()}else if(r==='failed')toast('No se pudo instalar la app. Intenta desde el menú del artefacto.')}).catch(()=>toast('Abre esta página en la app de escritorio de Claude para instalarla.'))};
 
 /* Deslizar en pantallas táctiles: cada lado hace lo que elijas en Ajustes (por defecto → hecho, ← posponer) */
-const SWA={done:{l:'Hecho',i:ic.check},snooze:{l:'Posponer',i:ic.clock},trash:{l:'Eliminar',i:ic.trash},read:{l:'Leído / no leído',i:ic.circle},pin:{l:'Anclar',i:ic.pin},none:{l:'Nada',i:''}};
+const SWA={done:{l:'Hecho',i:ic.check},snooze:{l:'Posponer',i:ic.clock},trash:{l:'Eliminar',i:ic.trash},read:{l:'Leído / no leído',i:ic.circle},pin:{l:'Anclar',i:ic.pin},aside:{l:'Apartar',i:ic.aside},none:{l:'Nada',i:''}};
 const swipeAct=right=>{const v=right?(PREF.swipeR||'done'):(PREF.swipeL||'snooze');return SWA[v]?v:'none'};
 const swipeLabel=(a,m)=>a==='read'?(m&&m.unread?'Leído':'No leído'):a==='pin'?(m&&m.pinned?'Desanclar':'Anclar'):SWA[a].l;
 function runSwipe(a,id,row){
   const m=getMail(id);if(!m)return;
   if(a==='snooze')return act('snooze',id,row);
   if(a==='pin')return act('pin',id);
+  if(a==='aside')return act('aside',id);
   if(a==='read'){if(m.unread){markRead(m);renderAll();toast('Marcado como leído',()=>{m.unread=true;if(m.gm)gRun(()=>gcall('label_thread',{threadId:m.id,labelIds:['UNREAD']}));renderAll()})}else{const sel=S.sel;act('unread',id);if(sel&&sel!==id){S.sel=sel;$('#app').classList.add('reading');renderAll()}}}
 }
 (function(){
@@ -2931,7 +2981,7 @@ function runSwipe(a,id,row){
     s.row.classList.remove('dragging');
     const a=Math.abs(s.dx)>TH?swipeAct(s.dx>0):'none';
     if(a==='none'){s.row.style.transform='';setTimeout(()=>s.under&&s.under.remove(),200)}
-    else if(a==='done'||a==='trash'){s.row.style.transform=`translateX(${s.dx>0?110:-110}%)`;setTimeout(()=>{s.under&&s.under.remove();act(a,s.id)},170)}
+    else if(a==='done'||a==='trash'||a==='aside'){s.row.style.transform=`translateX(${s.dx>0?110:-110}%)`;setTimeout(()=>{s.under&&s.under.remove();act(a,s.id)},170)}
     else{s.row.style.transform='';setTimeout(()=>{s.under&&s.under.remove();runSwipe(a,s.id,s.row)},170)}
   };
   list.addEventListener('pointerup',e=>end(e,false));list.addEventListener('pointercancel',e=>end(e,true));
