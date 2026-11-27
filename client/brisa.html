@@ -630,7 +630,18 @@ body{-webkit-font-smoothing:antialiased}
 .mhead{display:flex;align-items:center;gap:10px;min-width:0}
 .mhead .av{width:30px;height:30px;font-size:12px;flex:none}
 .mfrom{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mhead .to{color:var(--accent);font-size:14px;white-space:nowrap}
+.mhead .to{color:var(--accent);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;display:inline-flex;align-items:center;gap:2px;padding:2px 4px;border-radius:6px;background:transparent;border:0;cursor:pointer;font-family:inherit}
+.mhead .to:hover{background:var(--accent-soft,rgb(11 87 208 / .08))}
+.mhead .to .car{width:15px;height:15px;flex:none;transition:transform .15s}.mhead .to.open .car{transform:rotate(180deg)}
+.rcpt{margin:8px 0 4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:14px}
+.rc-g{display:flex;gap:10px;padding:4px 0}.rc-g+.rc-g{border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+.rc-l{width:40px;flex:none;color:var(--muted);font-weight:500;padding-top:6px}
+.rcpt ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.rcpt li{display:flex;align-items:center;gap:10px;min-width:0}
+.rcpt li .av{width:28px;height:28px;font-size:11px;flex:none;margin:0}
+.rcpt li span{display:flex;flex-direction:column;min-width:0}
+.rcpt li b{font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcpt li small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mhead time{color:var(--muted);font-size:13.5px;white-space:nowrap}
 .mprev{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:6px 0 0 40px;font-size:14px}
 .mbody{font-size:15.5px;line-height:1.5;margin-top:12px;max-width:80ch;overflow-wrap:anywhere}
@@ -1492,7 +1503,7 @@ async function loadBody(m){
     if(!m.subject)fromThread(p,m.id);
     const dn=m.dn||new Map();
     m.msgs=((p&&p.messages)||[]).map(x=>({id:x.id,from:parseAddr(x.sender,dn),t:+x.internalDate||Date.parse(x.date)||0,
-      sent:(x.labelIds||[]).includes('SENT'),to:(x.toRecipients||[]).concat(x.ccRecipients||[]).map(a=>parseAddr(a,dn)),text:toParas(x.plaintextBody||decode(x.snippet||'')),
+      sent:(x.labelIds||[]).includes('SENT'),to:(x.toRecipients||[]).concat(x.ccRecipients||[]).map(a=>parseAddr(a,dn)),toL:(x.toRecipients||[]).map(a=>parseAddr(a,dn)),ccL:(x.ccRecipients||[]).map(a=>parseAddr(a,dn)),text:toParas(x.plaintextBody||decode(x.snippet||'')),
       attach:(x.attachments||[]).filter(a=>a&&(a.filename||a.name)).map(a=>({name:a.filename||a.name,size:fmtSize(a.size||a.sizeBytes)}))}));
     if(!m.msgs.length)m.msgs=null;
   }catch(e){m.bodyErr=e}
@@ -1808,13 +1819,21 @@ function renderReader(){
   if(m.gm&&!m.msgs&&!m.loadingBody&&!m.bodyErr)loadBody(m);
   const replyTo=m.sent?m.to:m.from;const su=snoozeUntil(m);const pr=isPrio(m);
   const ti=(a,icon,t,cls='')=>`<button class="ti ${cls}" data-act="${a}" title="${t}" aria-label="${t}">${icon}</button>`;
-  const recips=x=>{const t=(x.to||[]).filter(a=>a&&(a.name||a.email));if(!t.length)return x.from&&x.from.me?'':'<span class="to">a mí</span>';return `<span class="to">a ${esc(t[0].name||t[0].email)}${t.length>1?' +'+(t.length-1):''}</span>`};
+  // "a Fulano +5": al tocarlo se despliega De / Para / CC con nombres y correos.
+  const recips=(x,i)=>{const t=(x.to||[]).filter(a=>a&&(a.name||a.email));if(!t.length&&x.from&&x.from.me)return '';
+    return `<button type="button" class="to" data-recips="${i}" aria-expanded="false">${t.length?'a '+esc(t[0].name||t[0].email)+(t.length>1?' +'+(t.length-1):''):'a mí'}<svg class="i car" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>`};
+  const person=a=>`<li>${avatar(a)}<span><b>${esc(a.name||a.email||'')}</b>${a.email&&a.email!==a.name?`<small>${esc(a.email)}</small>`:''}</span></li>`;
+  const rcptBox=(x,i)=>{const t=(x.to||[]).filter(a=>a&&(a.name||a.email));
+    const toL=(x.toL||(x.ccL?[]:t)).filter(a=>a&&(a.name||a.email)),ccL=(x.ccL||[]).filter(a=>a&&(a.name||a.email));
+    const me=[{name:'Yo',email:myAddrs()[0]||''}];
+    const row=(l,arr)=>arr.length?`<div class="rc-g"><span class="rc-l">${l}</span><ul>${arr.map(person).join('')}</ul></div>`:'';
+    return `<div class="rcpt" data-rcpt="${i}" hidden>${row('De',[x.from])}${row('Para',toL.length?toL:(t.length?[]:me))}${row('CC',ccL)}</div>`};
   let msgsH;
   if(m.msgs)msgsH=m.msgs.map((x,i)=>{
     const last=i===m.msgs.length-1,col=!last&&!x.open;
     const at=x.attach&&x.attach.length?x.attach:(last&&m.attach?[m.attach]:[]);
     return `<article class="mcard ${col?'collapsed':''}" data-i="${i}">
-      <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x)}<span class="sp"></span><time>${x.pending?'Enviando…':esc(longDate(x.t))}</time></div>
+      <div class="mhead" ${col?'data-expandmsg':''}>${avatar(x.from)}<b class="mfrom">${esc(x.from.name)}</b>${recips(x,i)}<span class="sp"></span><time>${x.pending?'Enviando…':esc(longDate(x.t))}</time></div>${rcptBox(x,i)}
       ${col?`<div class="mprev" data-expandmsg>${esc(plain(x.text.join(' ')))}</div>`:`<div class="mbody">${x.text.map(p=>`<p>${p}</p>`).join('')}</div>
       ${at.length?`<div class="atts"><div class="atts-h">${ic.clip}<span>${at.length===1?'1 adjunto':at.length+' adjuntos'}</span></div><div class="ftiles">${at.map((a,k)=>caps.server&&x.id?`<a class="libfile" href="/api/attachment?m=${encodeURIComponent(x.id)}&i=${k}&n=${encodeURIComponent(a.name||a)}" target="_blank" rel="noopener" title="Abrir">${fileTile(a)}</a>`:fileTile(a)).join('')}</div></div>`:''}
       ${last&&!m.sent?`<div class="qrow"><button class="aiq" data-ai="draft" title="Redactar respuesta con IA">+ai</button>${QCHIPS.map((q,k)=>`<button class="qchip" data-qreply="${k}">${q[0]}</button>`).join('')}<span class="sp"></span><button class="ti" data-openreply title="Responder (R)" aria-label="Responder">${ic.reply}</button><button class="ti" data-openreply="all" title="Responder a todos" aria-label="Responder a todos">${ic.replyAll}</button></div>`:''}`}
@@ -2540,6 +2559,9 @@ function voiceSearch(text){
 }
 window.brisaVoiceSearch=voiceSearch;
 window.addEventListener('brisa-refresh',()=>{if(S.mode==='gmail')loadSmart(true)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-recips]');if(!b)return;e.stopPropagation();e.preventDefault();
+  const box=b.closest('.mcard')&&b.closest('.mcard').querySelector('[data-rcpt="'+b.dataset.recips+'"]');if(!box)return;
+  box.hidden=!box.hidden;b.setAttribute('aria-expanded',String(!box.hidden));b.classList.toggle('open',!box.hidden)},true);
 $('#namesBtn').onclick=()=>{
   const on=namesMode()&&PREF.namesCollapsed;
   if(on){PREF.inboxType=PREF.prevInboxType&&PREF.prevInboxType!=='names'?PREF.prevInboxType:'unread';PREF.namesCollapsed=false}
