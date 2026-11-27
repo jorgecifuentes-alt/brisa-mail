@@ -796,7 +796,7 @@ body{-webkit-font-smoothing:antialiased}
 }
 /* ===== Celular: igual a Spark para Android ===== */
 #calBtn{display:none}
-#fontBtn{display:none}
+#fontBtn{display:grid}
 @media (max-width:760px) and (pointer:coarse){#fontBtn{display:grid}.list-head .icon-btn{width:40px!important;height:44px!important}.list-head .icon-btn svg{width:23px!important;height:23px!important}.list-head .top{gap:0!important}.ttl{flex:1;padding:0 4px!important}}
 .gate-card .who{min-width:0}.gate-card .who span,.gate-card .who small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gate-acts .thumb{min-width:0}
 .list,.rbody{zoom:var(--zoom,1)}
@@ -2751,7 +2751,7 @@ $('#reader').addEventListener('click',e=>{
   const mm=e.target.closest('[data-moremenu]');if(mm){const m=getMail(S.sel);if(!m)return;
     const it=[['Responder',ic.reply,()=>openReply(true,'reply')],['Responder a todos',ic.replyAll,()=>openReply(true,'all')],['Reenviar',ic.fwd,()=>openReply(true,'fwd')]];
     it.push(['Modo lectura',ic.doc,()=>setZen(true)]);
-    if(isPhone())it.push(['Tamaño de letra',ic.doc,()=>openFontPanel(mm)]);
+    it.push(['Tamaño de letra',ic.doc,()=>openFontPanel(mm)]);
     it.push(['Ver correos de esta persona',ic.person,()=>{S.filters={from:senderOf(m)};S.q='';$('#q').value='';S.folder='smart';S.section=null;$('.list-head').classList.add('searching');$('#app').classList.remove('reading');runSearch();renderNav()}]);
     if(caps.db&&uid)it.push(['Compartir con el equipo',ic.share,()=>act('share',m.id)]);
     if(m.url)it.push(['Abrir en Gmail',ic.ext,()=>window.open(m.url,'_blank','noopener')]);
